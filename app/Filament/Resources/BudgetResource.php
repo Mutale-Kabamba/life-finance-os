@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BudgetResource\Pages;
 use App\Models\Budget;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -16,7 +17,7 @@ class BudgetResource extends Resource
     protected static ?string $model = Budget::class;
     protected static ?string $navigationIcon = 'heroicon-o-calculator';
     protected static ?string $navigationGroup = 'Personal Finance';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
@@ -80,6 +81,18 @@ class BudgetResource extends Resource
                 Tables\Filters\SelectFilter::make('period')
                     ->options(['weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'annual' => 'Annual']),
             ])
+            ->headerActions([
+                CsvActions::export([
+                    'name'           => 'Name',
+                    'period'         => 'Period',
+                    'start_date'     => 'Start Date',
+                    'end_date'       => 'End Date',
+                    'total_income'   => 'Total Income',
+                    'total_budgeted' => 'Total Budgeted',
+                    'total_actual'   => 'Total Actual',
+                    'status'         => 'Status',
+                ], 'budgets'),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
@@ -98,7 +111,9 @@ class BudgetResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            BudgetResource\RelationManagers\ItemsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

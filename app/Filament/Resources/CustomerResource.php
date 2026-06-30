@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -55,6 +56,16 @@ class CustomerResource extends Resource
                     ->label('Business')
                     ->relationship('business', 'name'),
                 Tables\Filters\TernaryFilter::make('is_active'),
+            ])
+            ->headerActions([
+                CsvActions::export([
+                    'name'                => 'Name',
+                    'business.name'       => 'Business',
+                    'email'               => 'Email',
+                    'phone'               => 'Phone',
+                    'outstanding_balance' => 'Outstanding',
+                    'credit_limit'        => 'Credit Limit',
+                ], 'customers'),
             ])
             ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);

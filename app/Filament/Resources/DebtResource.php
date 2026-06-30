@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DebtResource\Pages;
 use App\Models\Debt;
+use App\Models\DebtPayment;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -73,7 +76,71 @@ class DebtResource extends Resource
                     ->options(['active' => 'Active', 'paid_off' => 'Paid Off', 'defaulted' => 'Defaulted']),
                 Tables\Filters\SelectFilter::make('type'),
             ])
+            ->headerActions([
+                CsvActions::export([
+                    'creditor_name'       => 'Creditor',
+                    'type'                => 'Type',
+                    'original_amount'     => 'Original Amount',
+                    'outstanding_balance' => 'Outstanding',
+                    'monthly_installment' => 'Monthly Installment',
+                    'interest_rate'       => 'Interest Rate',
+                    'due_date'            => 'Due Date',
+                    'status'              => 'Status',
+                ], 'debts'),
+                CsvActions::import(
+                    Debt::class,
+                    [
+                        'creditor_name'       => 'Creditor',
+                        'type'                => 'Type',
+                        'original_amount'     => 'Original Amount',
+                        'outstanding_balance' => 'Outstanding',
+                        'monthly_installment' => 'Monthly Installment',
+                        'interest_rate'       => 'Interest Rate',
+                        'notes'               => 'Notes',
+                    ],
+                    fn () => ['user_id' => auth()->id(), 'status' => 'active'],
+                    ['original_amount', 'outstanding_balance', 'monthly_installment', 'interest_rate'],
+                ),
+            ])
             ->actions([
+                Tables\Actions\Action::make('recordPayment')
+                    ->label('Record payment')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (Debt $record): bool => (float) $record->outstanding_balance > 0)
+                    ->modalHeading('Record a debt payment')
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()->prefix('ZMW')->required()->minValue(0.01)
+                            ->default(fn (Debt $record) => min((float) $record->monthly_installment, (float) $record->outstanding_balance))
+                            ->helperText(fn (Debt $record) => 'Outstanding: ZMW ' . number_format((float) $record->outstanding_balance, 2)),
+                        Forms\Components\DatePicker::make('payment_date')->default(now())->required(),
+                        Forms\Components\TextInput::make('reference')->maxLength(255),
+                        Forms\Components\Toggle::make('is_late')->label('Paid late'),
+                        Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                    ])
+                    ->action(function (Debt $record, array $data): void {
+                        $amount = min((float) $data['amount'], (float) $record->outstanding_balance);
+
+                        DebtPayment::create([
+                            'debt_id'      => $record->id,
+                            'user_id'      => auth()->id(),
+                            'amount'       => $amount,
+                            'payment_date' => $data['payment_date'],
+                            'is_late'      => $data['is_late'] ?? false,
+                            'reference'    => $data['reference'] ?? null,
+                            'notes'        => $data['notes'] ?? null,
+                        ]);
+
+                        $record->refresh();
+
+                        Notification::make()
+                            ->title('Payment recorded')
+                            ->body('Outstanding balance is now ZMW ' . number_format((float) $record->outstanding_balance, 2)
+                                . ($record->status === 'paid_off' ? ' — debt cleared!' : ''))
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -91,7 +158,9 @@ class DebtResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            DebtResource\RelationManagers\PaymentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

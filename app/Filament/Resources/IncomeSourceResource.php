@@ -3,9 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\IncomeSourceResource\Pages;
+use App\Models\IncomeReceipt;
 use App\Models\IncomeSource;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -85,7 +88,61 @@ class IncomeSourceResource extends Resource
                     ]),
                 Tables\Filters\TernaryFilter::make('is_active')->label('Active'),
             ])
+            ->headerActions([
+                CsvActions::export([
+                    'name'      => 'Name',
+                    'type'      => 'Type',
+                    'amount'    => 'Amount',
+                    'frequency' => 'Frequency',
+                    'is_active' => 'Active',
+                ], 'income-sources'),
+                CsvActions::import(
+                    IncomeSource::class,
+                    [
+                        'name'      => 'Name',
+                        'type'      => 'Type',
+                        'amount'    => 'Amount',
+                        'frequency' => 'Frequency',
+                        'notes'     => 'Notes',
+                    ],
+                    fn () => ['user_id' => auth()->id(), 'is_active' => true],
+                    ['amount'],
+                ),
+            ])
             ->actions([
+                Tables\Actions\Action::make('recordIncome')
+                    ->label('Record income received')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->modalHeading('Record income received')
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()->prefix('ZMW')->required()->minValue(0.01)
+                            ->default(fn (IncomeSource $record) => (float) $record->amount),
+                        Forms\Components\DatePicker::make('received_date')->default(now())->required(),
+                        Forms\Components\TextInput::make('method')->label('Method')
+                            ->placeholder('Cash, bank, mobile money...')->maxLength(50),
+                        Forms\Components\TextInput::make('reference')->maxLength(255),
+                        Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                    ])
+                    ->action(function (IncomeSource $record, array $data): void {
+                        IncomeReceipt::create([
+                            'user_id'          => auth()->id(),
+                            'income_source_id' => $record->id,
+                            'name'             => $record->name,
+                            'amount'           => $data['amount'],
+                            'received_date'    => $data['received_date'],
+                            'method'           => $data['method'] ?? null,
+                            'reference'        => $data['reference'] ?? null,
+                            'notes'            => $data['notes'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Income recorded')
+                            ->body('ZMW ' . number_format((float) $data['amount'], 2) . ' from ' . $record->name)
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

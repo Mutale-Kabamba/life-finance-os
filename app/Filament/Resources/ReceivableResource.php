@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReceivableResource\Pages;
 use App\Models\Receivable;
+use App\Models\ReceivablePayment;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -90,7 +93,65 @@ class ReceivableResource extends Resource
                     'written_off'    => 'Written off',
                 ]),
             ])
+            ->headerActions([
+                CsvActions::export([
+                    'debtor_name' => 'Debtor',
+                    'phone'       => 'Phone',
+                    'amount'      => 'Amount',
+                    'amount_paid' => 'Received',
+                    'due_date'    => 'Due Date',
+                    'status'      => 'Status',
+                ], 'receivables'),
+                CsvActions::import(
+                    Receivable::class,
+                    [
+                        'debtor_name' => 'Debtor',
+                        'phone'       => 'Phone',
+                        'amount'      => 'Amount',
+                        'notes'       => 'Notes',
+                    ],
+                    fn () => ['user_id' => auth()->id(), 'status' => 'pending', 'amount_paid' => 0],
+                    ['amount'],
+                ),
+            ])
             ->actions([
+                Tables\Actions\Action::make('recordReceipt')
+                    ->label('Record receipt')
+                    ->icon('heroicon-o-arrow-down-on-square')
+                    ->color('success')
+                    ->visible(fn (Receivable $record): bool => $record->outstanding > 0 && $record->status !== 'written_off')
+                    ->modalHeading('Record money received')
+                    ->form([
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Amount received')
+                            ->numeric()->prefix('ZMW')->required()->minValue(0.01)
+                            ->default(fn (Receivable $record) => (float) $record->outstanding)
+                            ->helperText(fn (Receivable $record) => 'Outstanding: ZMW ' . number_format((float) $record->outstanding, 2)),
+                        Forms\Components\DatePicker::make('payment_date')->default(now())->required(),
+                        Forms\Components\TextInput::make('reference')->maxLength(255),
+                        Forms\Components\Textarea::make('notes')->columnSpanFull(),
+                    ])
+                    ->action(function (Receivable $record, array $data): void {
+                        $amount = min((float) $data['amount'], (float) $record->outstanding);
+
+                        ReceivablePayment::create([
+                            'receivable_id' => $record->id,
+                            'user_id'       => auth()->id(),
+                            'amount'        => $amount,
+                            'payment_date'  => $data['payment_date'],
+                            'reference'     => $data['reference'] ?? null,
+                            'notes'         => $data['notes'] ?? null,
+                        ]);
+
+                        $record->refresh();
+
+                        Notification::make()
+                            ->title('Receipt recorded')
+                            ->body('Outstanding is now ZMW ' . number_format((float) $record->outstanding, 2)
+                                . ($record->status === 'paid' ? ' — fully settled!' : ''))
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -108,7 +169,9 @@ class ReceivableResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            ReceivableResource\RelationManagers\PaymentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
