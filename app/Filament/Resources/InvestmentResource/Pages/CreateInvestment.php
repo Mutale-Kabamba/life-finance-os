@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\InvestmentResource\Pages;
 
 use App\Filament\Resources\InvestmentResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateInvestment extends CreateRecord
 {
