@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\BudgetResource\Pages;
 
 use App\Filament\Resources\BudgetResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateBudget extends CreateRecord
 {

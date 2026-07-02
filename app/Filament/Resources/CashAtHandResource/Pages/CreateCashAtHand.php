@@ -4,7 +4,7 @@ namespace App\Filament\Resources\CashAtHandResource\Pages;
 
 use App\Filament\Resources\CashAtHandResource;
 use App\Services\Accounting\CashAtHandService;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
 class CreateCashAtHand extends CreateRecord

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\LedgerAccountResource\Pages;
 
 use App\Filament\Resources\LedgerAccountResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateLedgerAccount extends CreateRecord
 {

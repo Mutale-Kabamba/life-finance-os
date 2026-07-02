@@ -4,7 +4,7 @@ namespace App\Filament\Resources\LedgerTransactionResource\Pages;
 
 use App\Filament\Resources\LedgerTransactionResource;
 use App\Models\LedgerTransaction;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateLedgerTransaction extends CreateRecord
 {

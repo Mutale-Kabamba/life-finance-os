@@ -62,25 +62,31 @@ class ReceivablePaymentObserver
      */
     private function mirrorToIncome(ReceivablePayment $payment): void
     {
+        if ((float) $payment->amount <= 0) {
+            return;
+        }
+
+        $userId = $payment->user_id ?: $payment->receivable?->user_id;
+
+        if (! $userId) {
+            return;
+        }
+
         $debtor = $payment->receivable?->debtor_name ?? 'debtor';
 
         $attributes = [
-            'user_id'       => $payment->user_id,
+            'user_id'       => $userId,
             'name'          => 'Collected from ' . $debtor,
             'amount'        => $payment->amount,
             'received_date' => $payment->payment_date,
             'method'        => $payment->method,
             'reference'     => $payment->reference,
+            'notes'         => $payment->notes,
         ];
 
-        $receipt = $payment->incomeReceipt()->first();
-
-        if ($receipt) {
-            $receipt->forceFill($attributes)->save();
-
-            return;
-        }
-
-        IncomeReceipt::create($attributes + ['receivable_payment_id' => $payment->id]);
+        IncomeReceipt::query()->updateOrCreate(
+            ['receivable_payment_id' => $payment->id],
+            $attributes,
+        );
     }
 }

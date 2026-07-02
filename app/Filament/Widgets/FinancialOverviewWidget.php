@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class FinancialOverviewWidget extends BaseWidget
 {
@@ -13,6 +14,13 @@ class FinancialOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $user = Auth::user();
+
+        $totalAccountsBalance = 0.0;
+        if (Schema::hasTable('accounts')) {
+            $totalAccountsBalance = (float) $user->accounts()
+                ->where('is_active', true)
+                ->sum('current_balance');
+        }
 
         $totalMonthlyIncome = $user->incomeSources()
             ->where('is_active', true)->get()
@@ -30,11 +38,18 @@ class FinancialOverviewWidget extends BaseWidget
             ->where('status', 'active')
             ->sum('current_amount');
 
+        $totalMoney = $totalAccountsBalance + (float) $totalSavings;
+
         $netWorth = $user->net_worth;
 
         $cashFlow = $totalMonthlyIncome - $totalMonthlyExpenses;
 
         return [
+            Stat::make('Total Money I Have', 'ZMW ' . number_format($totalMoney, 2))
+                ->description('Active accounts + active savings')
+                ->descriptionIcon('heroicon-m-wallet')
+                ->color('success'),
+
             Stat::make('Monthly Income', 'ZMW ' . number_format($totalMonthlyIncome, 2))
                 ->description('All active income sources')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')

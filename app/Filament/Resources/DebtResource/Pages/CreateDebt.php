@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\DebtResource\Pages;
 
 use App\Filament\Resources\DebtResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateDebt extends CreateRecord
 {

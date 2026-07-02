@@ -4,7 +4,7 @@ namespace App\Filament\Resources\InventoryResource\Pages;
 
 use App\Filament\Resources\InventoryResource;
 use App\Models\StockMovement;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateInventory extends CreateRecord
 {

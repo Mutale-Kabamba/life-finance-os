@@ -8,7 +8,7 @@ use App\Models\LedgerTransaction;
 use App\Models\StockMovement;
 use App\Services\Accounting\PostingRuleService;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
