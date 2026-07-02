@@ -20,6 +20,8 @@ use App\Observers\LedgerTransactionObserver;
 use App\Observers\ReceivablePaymentObserver;
 use App\Observers\SavingsTransactionObserver;
 use App\Observers\StockMovementObserver;
+use App\Http\Responses\FilamentLogoutResponse;
+use Filament\Http\Responses\Auth\Contracts\LogoutResponse;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(LogoutResponse::class, FilamentLogoutResponse::class);
     }
 
     /**
