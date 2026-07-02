@@ -289,6 +289,138 @@
         .card h3 { font-size: 1.15rem; font-weight: 600; }
         .card p { margin-top: 10px; color: var(--muted); font-size: .95rem; }
 
+        /* FAQ */
+        .faq-wrap {
+            max-width: 860px;
+            margin-inline: auto;
+            display: grid;
+            gap: 12px;
+        }
+        .faq-item {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .faq-item summary {
+            list-style: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--ink);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .faq-item summary::-webkit-details-marker { display: none; }
+        .faq-item summary::after {
+            content: '+';
+            font-size: 1.2rem;
+            line-height: 1;
+            color: var(--brand);
+            transition: transform .2s ease;
+            flex-shrink: 0;
+        }
+        .faq-item[open] summary::after {
+            content: '−';
+        }
+        .faq-content {
+            border-top: 1px solid var(--line);
+            padding: 12px 18px 16px;
+            color: var(--muted);
+            font-size: .95rem;
+        }
+
+        /* Contact */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 22px;
+            align-items: start;
+        }
+        .contact-card,
+        .contact-info {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 22px;
+        }
+        .contact-card h3,
+        .contact-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        .contact-card p,
+        .contact-info p {
+            color: var(--muted);
+            font-size: .93rem;
+        }
+        .contact-form {
+            margin-top: 16px;
+            display: grid;
+            gap: 12px;
+        }
+        .contact-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .field {
+            display: grid;
+            gap: 6px;
+        }
+        .field label {
+            font-size: .82rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .field input,
+        .field textarea,
+        .field select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 11px 12px;
+            font: inherit;
+            color: var(--ink);
+            background: #fff;
+            outline: none;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+        .field input:focus,
+        .field textarea:focus,
+        .field select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(15, 157, 108, .16);
+        }
+        .field textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+        .contact-list {
+            margin-top: 16px;
+            display: grid;
+            gap: 10px;
+        }
+        .contact-pill {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 11px 12px;
+            background: #fafcfb;
+        }
+        .contact-pill b {
+            display: block;
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+        .contact-pill span {
+            font-size: .95rem;
+            color: var(--ink);
+            font-weight: 600;
+        }
+
         /* CTA */
         .cta {
             background: linear-gradient(150deg, #0b100d, #123b2b);
@@ -313,6 +445,7 @@
 
         @media (max-width: 860px) {
             .grid { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
             .preview-body { grid-template-columns: 1fr; }
             .kpis { grid-template-columns: 1fr; }
             .nav-links { display: none; }
@@ -441,6 +574,25 @@
                 border-radius: 16px;
             }
 
+            .faq-item summary {
+                padding: 14px 14px;
+                font-size: .95rem;
+            }
+
+            .faq-content {
+                padding: 10px 14px 14px;
+                font-size: .9rem;
+            }
+
+            .contact-card,
+            .contact-info {
+                padding: 16px;
+            }
+
+            .contact-row {
+                grid-template-columns: 1fr;
+            }
+
             .cta {
                 border-radius: 18px;
                 padding: 36px 16px;
@@ -503,7 +655,14 @@
         [data-theme="dark"] .kpi,
         [data-theme="dark"] .chart,
         [data-theme="dark"] .list,
-        [data-theme="dark"] .card {
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .faq-item,
+        [data-theme="dark"] .contact-card,
+        [data-theme="dark"] .contact-info,
+        [data-theme="dark"] .contact-pill,
+        [data-theme="dark"] .field input,
+        [data-theme="dark"] .field textarea,
+        [data-theme="dark"] .field select {
             background: #0f1b17;
         }
 
@@ -512,10 +671,26 @@
         [data-theme="dark"] .chart,
         [data-theme="dark"] .list,
         [data-theme="dark"] .card,
+        [data-theme="dark"] .faq-item,
+        [data-theme="dark"] .faq-content,
+        [data-theme="dark"] .contact-card,
+        [data-theme="dark"] .contact-info,
+        [data-theme="dark"] .contact-pill,
+        [data-theme="dark"] .field input,
+        [data-theme="dark"] .field textarea,
+        [data-theme="dark"] .field select,
         [data-theme="dark"] .pill,
         [data-theme="dark"] .btn-outline,
         [data-theme="dark"] footer {
             border-color: var(--line);
+        }
+
+        [data-theme="dark"] .faq-item summary,
+        [data-theme="dark"] .contact-pill span,
+        [data-theme="dark"] .field input,
+        [data-theme="dark"] .field textarea,
+        [data-theme="dark"] .field select {
+            color: var(--ink);
         }
 
         [data-theme="dark"] .btn-outline { background: #10231c; }
@@ -566,6 +741,7 @@
                 <a href="#features">Features</a>
                 <a href="#workflow">How it works</a>
                 <a href="#faq">FAQ</a>
+                <a href="#contact">Contact</a>
             </nav>
 
             <nav class="nav-actions">
@@ -587,6 +763,7 @@
                 <a href="#features">Features</a>
                 <a href="#workflow">How it works</a>
                 <a href="#faq">FAQ</a>
+                <a href="#contact">Contact</a>
             </nav>
             <div class="mobile-actions">
                 @auth
@@ -742,6 +919,117 @@
                         <h3>3. Grow with clarity</h3>
                         <p>Watch clear reports and insights turn everyday decisions into lasting wealth.</p>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="faq" style="padding-top:0;">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">FAQ</span>
+                    <h2>Frequently asked questions</h2>
+                    <p>Everything you need to know before getting started.</p>
+                </div>
+
+                <div class="faq-wrap reveal delay-1">
+                    <details class="faq-item" open>
+                        <summary>Can I manage personal, family, and business finances together?</summary>
+                        <div class="faq-content">Yes. Life Finance OS is designed to unify personal, family, and business finance workflows in one place while keeping your data organized by context.</div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>How do budget purchases update the system?</summary>
+                        <div class="faq-content">When an item is marked as bought, actual spending is synced to your budget totals and can create linked expense and account transaction records.</div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Is there dark mode support?</summary>
+                        <div class="faq-content">Yes. Use the theme toggle in the top navigation on the landing page to switch between light and dark mode.</div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Can I start without entering all my data at once?</summary>
+                        <div class="faq-content">Absolutely. You can begin with your key accounts and budgets, then progressively add expenses, debts, savings goals, and business records.</div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="contact" style="padding-top:0;">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Contact</span>
+                    <h2>Contact us</h2>
+                    <p>Have questions, feedback, or need help with setup? Send us a message.</p>
+                </div>
+
+                <div class="contact-grid reveal delay-1">
+                    <div class="contact-card">
+                        <h3>Send a message</h3>
+                        <p>Tell us a bit about what you need and our team will get back to you.</p>
+
+                        <form class="contact-form" action="javascript:void(0)">
+                            <div class="contact-row">
+                                <div class="field">
+                                    <label for="contact-name">Full name</label>
+                                    <input id="contact-name" name="name" type="text" placeholder="Your name" required>
+                                </div>
+                                <div class="field">
+                                    <label for="contact-email">Email</label>
+                                    <input id="contact-email" name="email" type="email" placeholder="you@example.com" required>
+                                </div>
+                            </div>
+
+                            <div class="contact-row">
+                                <div class="field">
+                                    <label for="contact-topic">Topic</label>
+                                    <select id="contact-topic" name="topic">
+                                        <option value="general">General inquiry</option>
+                                        <option value="support">Product support</option>
+                                        <option value="demo">Request a demo</option>
+                                        <option value="feedback">Feedback</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="contact-phone">Phone (optional)</label>
+                                    <input id="contact-phone" name="phone" type="tel" placeholder="+260 ...">
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="contact-message">Message</label>
+                                <textarea id="contact-message" name="message" placeholder="How can we help?" required></textarea>
+                            </div>
+
+                            <div class="hero-actions" style="justify-content:flex-start; margin-top:4px;">
+                                <button type="submit" class="btn btn-primary">Send message</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <aside class="contact-info">
+                        <h3>Reach us directly</h3>
+                        <p>Prefer direct channels? Use any of the options below.</p>
+
+                        <div class="contact-list">
+                            <div class="contact-pill">
+                                <b>Email</b>
+                                <span>support@lifefinanceos.com</span>
+                            </div>
+                            <div class="contact-pill">
+                                <b>Phone</b>
+                                <span>+260 97 000 0000</span>
+                            </div>
+                            <div class="contact-pill">
+                                <b>Business hours</b>
+                                <span>Mon - Fri, 08:00 - 17:00 CAT</span>
+                            </div>
+                            <div class="contact-pill">
+                                <b>Location</b>
+                                <span>Lusaka, Zambia</span>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </section>
