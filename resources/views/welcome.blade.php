@@ -215,6 +215,14 @@
         }
         .hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
         .hero-note { margin-top: 16px; font-size: .85rem; color: rgba(203, 220, 212, 0.85); }
+        .hero-copy {
+            transition: opacity .32s ease, transform .32s ease;
+            will-change: opacity, transform;
+        }
+        .hero-copy.is-changing {
+            opacity: 0;
+            transform: translateY(6px);
+        }
 
         /* Floating dashboard card */
         .preview {
@@ -779,8 +787,8 @@
     <main>
         <section class="hero">
             <span class="pill reveal"><span class="dot"></span> Personal · Family · Business · Wealth</span>
-            <h1 class="reveal">Your money, <span class="grad">simple and clear.</span></h1>
-            <p class="lede reveal delay-1">
+            <h1 class="reveal hero-copy" id="hero-heading">Your money, <span class="grad" id="hero-highlight">simple and clear.</span></h1>
+            <p class="lede reveal delay-1 hero-copy" id="hero-caption">
                 {{ config('app.name', 'Life Finance OS') }} brings every part of your financial life into one calm,
                 modern dashboard — so you always know where you stand.
             </p>
@@ -1096,6 +1104,72 @@
                     menuToggle?.setAttribute('aria-expanded', 'false');
                 });
             });
+
+            const heroHeading = document.getElementById('hero-heading');
+            const heroHighlight = document.getElementById('hero-highlight');
+            const heroCaption = document.getElementById('hero-caption');
+
+            const heroSlides = [
+                {
+                    lead: 'Your money,',
+                    highlight: 'simple and clear.',
+                    caption: "{{ config('app.name', 'Life Finance OS') }} brings every part of your financial life into one calm, modern dashboard — so you always know where you stand.",
+                },
+                {
+                    lead: 'Plan better,',
+                    highlight: 'spend with confidence.',
+                    caption: 'Build budgets, track real spending, and stay on top of every kwacha in real time.',
+                },
+                {
+                    lead: 'Start now,',
+                    highlight: 'free for all.',
+                    caption: 'Enjoy full access at no cost for everyone through Fall 2027 — launch now while the offer is live.',
+                },
+                {
+                    lead: 'One dashboard,',
+                    highlight: 'total financial control.',
+                    caption: 'Personal, family, and business finances all connected in one place.',
+                },
+                {
+                    lead: 'Track progress,',
+                    highlight: 'grow with clarity.',
+                    caption: 'See what is budgeted versus what is spent, then act faster with real-time insights.',
+                },
+                {
+                    lead: 'Built for Zambia,',
+                    highlight: 'ready for your future.',
+                    caption: 'From daily cash flow to long-term goals, manage everything in ZMW with confidence.',
+                },
+            ];
+
+            const promoSlideIndex = 2;
+            const heroSlideSequence = [0, 1, promoSlideIndex, 3, promoSlideIndex, 4, 5, promoSlideIndex];
+            let heroSlidePointer = 0;
+            const canRotateHero = heroHeading && heroHighlight && heroCaption && heroSlideSequence.length > 1;
+
+            const renderHeroSlide = (index) => {
+                const slide = heroSlides[index];
+                if (!slide) {
+                    return;
+                }
+
+                heroHeading.classList.add('is-changing');
+                heroCaption.classList.add('is-changing');
+
+                window.setTimeout(() => {
+                    heroHeading.innerHTML = `${slide.lead} <span class="grad" id="hero-highlight">${slide.highlight}</span>`;
+                    heroCaption.textContent = slide.caption;
+                    heroHeading.classList.remove('is-changing');
+                    heroCaption.classList.remove('is-changing');
+                }, 170);
+            };
+
+            if (canRotateHero) {
+                window.setInterval(() => {
+                    heroSlidePointer = (heroSlidePointer + 1) % heroSlideSequence.length;
+                    renderHeroSlide(heroSlideSequence[heroSlidePointer]);
+                }, 4600);
+            }
         })();
     </script>
 </body>

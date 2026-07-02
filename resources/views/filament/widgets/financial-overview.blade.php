@@ -1,7 +1,15 @@
 <x-filament-widgets::widget class="fi-wi-financial-overview">
+    @php
+        $hour = now()->hour;
+        $headerColor = match (true) {
+            $hour < 12 => '#f59e0b',
+            $hour < 17 => '#0ea5e9',
+            default => '#a78bfa',
+        };
+    @endphp
+
     <x-filament::section>
-        <x-slot name="heading">Dashboard</x-slot>
-        <x-slot name="description">Financial KPI overview</x-slot>
+        <x-slot name="heading"><span style="color: {{ $headerColor }};">Financial Overview!</span></x-slot>
 
         <style>
             .kpi-grid {
