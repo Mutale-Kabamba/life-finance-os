@@ -25,6 +25,19 @@
             --shadow-lg: 0 30px 80px -40px rgba(16, 22, 19, 0.4);
         }
 
+        [data-theme="dark"] {
+            --bg: #0b1210;
+            --ink: #e8f3ee;
+            --muted: #96a69d;
+            --line: #22312b;
+            --brand: #29c186;
+            --brand-dark: #1f9f6e;
+            --mint-1: #10231c;
+            --mint-2: #173128;
+            --shadow-sm: 0 6px 20px -14px rgba(0, 0, 0, 0.55);
+            --shadow-lg: 0 30px 80px -40px rgba(0, 0, 0, 0.8);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body { min-height: 100%; }
@@ -36,6 +49,7 @@
             color: var(--ink);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
         a { text-decoration: none; color: inherit; }
@@ -49,6 +63,9 @@
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--line);
         }
+        [data-theme="dark"] .nav {
+            background: rgba(11, 18, 16, 0.84);
+        }
         .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
         .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
         .brand-mark {
@@ -60,6 +77,54 @@
         .nav-links a { padding: 8px 14px; border-radius: 10px; transition: .18s ease; }
         .nav-links a:hover { background: var(--mint-1); color: var(--ink); }
         .nav-actions { display: flex; align-items: center; gap: 10px; }
+        .menu-toggle,
+        .theme-toggle {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: .18s ease;
+        }
+        .menu-toggle:hover,
+        .theme-toggle:hover { background: var(--mint-1); }
+        .menu-toggle { display: none; }
+        [data-theme="dark"] .menu-toggle,
+        [data-theme="dark"] .theme-toggle { background: #10231c; }
+        .theme-icon-sun { display: none; }
+        [data-theme="dark"] .theme-icon-sun { display: inline; }
+        [data-theme="dark"] .theme-icon-moon { display: none; }
+
+        .mobile-menu {
+            display: none;
+            border-top: 1px solid var(--line);
+            padding: 12px 16px 14px;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        [data-theme="dark"] .mobile-menu {
+            background: rgba(11, 18, 16, 0.96);
+        }
+        .mobile-menu.open { display: block; }
+        .mobile-links {
+            display: grid;
+            gap: 4px;
+        }
+        .mobile-links a {
+            padding: 10px 10px;
+            border-radius: 10px;
+            color: var(--muted);
+        }
+        .mobile-links a:hover { background: var(--mint-1); color: var(--ink); }
+        .mobile-actions {
+            margin-top: 12px;
+            display: grid;
+            gap: 8px;
+        }
 
         .btn {
             display: inline-flex; align-items: center; gap: 8px;
@@ -83,11 +148,42 @@
             max-width: 1200px;
             border-radius: 28px;
             padding: 92px 24px 96px;
+            min-height: 680px;
             text-align: center;
             overflow: hidden;
+            background: transparent;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(135deg, rgba(17, 27, 41, .46) 0%, rgba(28, 44, 61, .38) 48%, rgba(26, 42, 55, .44) 100%),
+                url('{{ asset('img/bg2.png') }}');
+            background-size: cover, cover;
+            background-repeat: no-repeat;
+            background-position: center center, center center;
+            background-blend-mode: normal;
+            opacity: .98;
+            filter: grayscale(10%) saturate(94%) contrast(103%);
+            -webkit-mask-image: linear-gradient(to top, transparent 0%, rgba(0, 0, 0, 0.14) 18%, rgba(0, 0, 0, 0.76) 38%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 1) 100%);
+            mask-image: linear-gradient(to top, transparent 0%, rgba(0, 0, 0, 0.14) 18%, rgba(0, 0, 0, 0.76) 38%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 1) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
             background:
-                radial-gradient(900px 480px at 50% -10%, var(--mint-2) 0%, transparent 62%),
-                linear-gradient(180deg, var(--mint-1) 0%, #ffffff 78%);
+                radial-gradient(760px 320px at 50% -5%, rgba(255,255,255,.1) 0%, transparent 62%),
+                linear-gradient(180deg, rgba(5, 9, 14, .72) 0%, rgba(5, 9, 14, .52) 32%, rgba(5, 9, 14, .24) 56%, rgba(5, 9, 14, .08) 74%, rgba(5, 9, 14, 0) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .hero > * {
+            position: relative;
+            z-index: 1;
         }
         .pill {
             display: inline-flex; align-items: center; gap: 8px;
@@ -95,20 +191,30 @@
             border: 1px solid var(--line); border-radius: 999px;
             padding: 7px 16px; font-size: .82rem; font-weight: 600; margin-bottom: 26px;
             box-shadow: var(--shadow-sm);
+            text-wrap: balance;
         }
         .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
         h1 {
             font-size: clamp(2.4rem, 6.2vw, 4.6rem);
-            line-height: 1.02; letter-spacing: -0.045em; font-weight: 700;
+            line-height: 1.11; letter-spacing: -0.03em; font-weight: 700;
             max-width: 16ch; margin-inline: auto;
+            text-wrap: balance;
+            color: #f2f7f5;
         }
         h1 .grad {
-            background: linear-gradient(110deg, var(--brand), #059669 60%, #10b981);
+            background: linear-gradient(110deg, #31d093, #18b579 62%, #74e8be);
             -webkit-background-clip: text; background-clip: text; color: transparent;
+            white-space: normal;
         }
-        .lede { margin: 22px auto 0; font-size: 1.12rem; color: var(--muted); max-width: 46ch; }
+        .lede {
+            margin: 22px auto 0;
+            font-size: clamp(0.98rem, 2.9vw, 1.12rem);
+            color: rgba(227, 238, 232, 0.88);
+            max-width: 46ch;
+            text-wrap: pretty;
+        }
         .hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-        .hero-note { margin-top: 16px; font-size: .85rem; color: var(--muted); }
+        .hero-note { margin-top: 16px; font-size: .85rem; color: rgba(203, 220, 212, 0.85); }
 
         /* Floating dashboard card */
         .preview {
@@ -134,7 +240,14 @@
         .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; grid-column: 1 / -1; }
         .kpi { background: #fafcfb; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
         .kpi b { display: block; font-size: .74rem; color: var(--muted); font-weight: 600; }
-        .kpi span { display: block; margin-top: 6px; font-size: 1.15rem; font-weight: 700; letter-spacing: -.01em; }
+        .kpi span {
+            display: block;
+            margin-top: 6px;
+            font-size: clamp(1rem, 2.8vw, 1.15rem);
+            font-weight: 700;
+            letter-spacing: -.01em;
+            line-height: 1.15;
+        }
         .kpi em { font-style: normal; font-size: .74rem; color: var(--brand); font-weight: 600; }
         .chart { background: #fafcfb; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
         .chart h4, .list h4 { font-size: .8rem; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
@@ -203,13 +316,233 @@
             .preview-body { grid-template-columns: 1fr; }
             .kpis { grid-template-columns: 1fr; }
             .nav-links { display: none; }
-            .hero { padding: 68px 20px 72px; border-radius: 22px; }
+            .hero {
+                padding: 68px 20px 72px;
+                border-radius: 22px;
+                margin-top: 8px;
+                min-height: 620px;
+            }
+            .preview {
+                margin-top: 40px;
+            }
+            .preview-top {
+                padding: 14px 16px;
+            }
+            .preview-body {
+                padding: 14px;
+                gap: 12px;
+            }
+            .kpi {
+                padding: 12px;
+            }
+            .list li {
+                font-size: .8rem;
+            }
             .cta { padding: 52px 24px; }
         }
+
+        @media (max-width: 700px) {
+            .nav-inner {
+                height: auto;
+                min-height: 68px;
+                padding-block: 10px;
+                flex-wrap: nowrap;
+                gap: 10px;
+            }
+
+            .brand {
+                font-size: .98rem;
+            }
+
+            .nav-actions {
+                justify-content: flex-end;
+                margin-left: auto;
+            }
+
+            .nav-actions .btn {
+                padding: 10px 14px;
+                font-size: .86rem;
+            }
+
+            .nav-actions .btn-ghost,
+            .nav-actions .btn-dark {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: inline-flex;
+            }
+
+            .mobile-menu {
+                display: none;
+            }
+
+            .hero {
+                padding: 56px 14px 56px;
+                min-height: 560px;
+            }
+
+            .hero::before {
+                background-position: 62% center;
+                opacity: .48;
+            }
+
+            .pill {
+                font-size: .76rem;
+                padding: 6px 12px;
+                margin-bottom: 18px;
+            }
+
+            h1 {
+                font-size: clamp(1.95rem, 10.3vw, 2.8rem);
+                max-width: 12ch;
+                line-height: 1.12;
+            }
+
+            .hero-actions {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .preview {
+                border-radius: 16px;
+            }
+
+            .preview-title {
+                font-size: .88rem;
+            }
+
+            .bars {
+                height: 92px;
+                gap: 8px;
+            }
+
+            .track {
+                width: 48%;
+            }
+
+            .section {
+                padding: 64px 0;
+            }
+
+            .section-head {
+                margin-bottom: 30px;
+            }
+
+            .card {
+                padding: 24px 18px;
+                border-radius: 16px;
+            }
+
+            .cta {
+                border-radius: 18px;
+                padding: 36px 16px;
+            }
+
+            .cta .hero-actions {
+                margin-top: 18px;
+            }
+        }
+
         @media (max-width: 520px) {
             .container { padding-inline: 16px; }
             .logo-row { gap: 24px; }
+
+            .brand {
+                gap: 8px;
+                font-size: .92rem;
+            }
+
+            .brand-mark {
+                width: 30px;
+                height: 30px;
+                font-size: .78rem;
+            }
+
+            .nav-actions {
+                gap: 8px;
+            }
+
+            .preview-top {
+                align-items: flex-start;
+            }
+
+            .win-dots {
+                margin-top: 3px;
+            }
+
+            .kpis {
+                gap: 10px;
+            }
+
+            .logo-row {
+                gap: 16px;
+            }
+
+            .logo-row span {
+                font-size: .95rem;
+            }
+
+            footer {
+                padding: 26px 0;
+            }
+
+            .foot-inner {
+                font-size: .82rem;
+            }
         }
+
+        [data-theme="dark"] .preview,
+        [data-theme="dark"] .kpi,
+        [data-theme="dark"] .chart,
+        [data-theme="dark"] .list,
+        [data-theme="dark"] .card {
+            background: #0f1b17;
+        }
+
+        [data-theme="dark"] .preview,
+        [data-theme="dark"] .kpi,
+        [data-theme="dark"] .chart,
+        [data-theme="dark"] .list,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .pill,
+        [data-theme="dark"] .btn-outline,
+        [data-theme="dark"] footer {
+            border-color: var(--line);
+        }
+
+        [data-theme="dark"] .btn-outline { background: #10231c; }
+        [data-theme="dark"] .btn-dark {
+            background: #e8f3ee;
+            color: #0b1210;
+            border-color: transparent;
+        }
+        [data-theme="dark"] .btn-dark:hover {
+            background: #d6e8df;
+        }
+        [data-theme="dark"] .btn-light {
+            background: #f2faf6;
+            color: #0b1210;
+            border-color: transparent;
+        }
+        [data-theme="dark"] .btn-light:hover {
+            background: #dcefe5;
+            color: #0b1210;
+        }
+        [data-theme="dark"] .btn-clear {
+            color: #f2faf6;
+            border-color: rgba(242,250,246,.6);
+            background: rgba(242,250,246,.06);
+        }
+        [data-theme="dark"] .btn-ghost:hover,
+        [data-theme="dark"] .btn-outline:hover { background: #183229; }
     </style>
 </head>
 <body>
@@ -236,20 +569,40 @@
             </nav>
 
             <nav class="nav-actions">
+                <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon-moon">◐</span>
+                    <span class="theme-icon-sun">☀</span>
+                </button>
                 @auth
                     <a href="{{ url('/admin') }}" class="btn btn-dark">Go to dashboard</a>
                 @else
                     <a href="{{ $loginUrl }}" class="btn btn-ghost">Log in</a>
                     <a href="{{ $registerUrl }}" class="btn btn-dark">Get started</a>
                 @endauth
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
             </nav>
+        </div>
+        <div class="mobile-menu" id="mobile-menu">
+            <nav class="mobile-links">
+                <a href="#features">Features</a>
+                <a href="#workflow">How it works</a>
+                <a href="#faq">FAQ</a>
+            </nav>
+            <div class="mobile-actions">
+                @auth
+                    <a href="{{ url('/admin') }}" class="btn btn-dark">Go to dashboard</a>
+                @else
+                    <a href="{{ $loginUrl }}" class="btn btn-outline">Log in</a>
+                    <a href="{{ $registerUrl }}" class="btn btn-dark">Get started</a>
+                @endauth
+            </div>
         </div>
     </header>
 
     <main>
         <section class="hero">
             <span class="pill reveal"><span class="dot"></span> Personal · Family · Business · Wealth</span>
-            <h1 class="reveal">Your money, <span class="grad">simple and clear</span>.</h1>
+            <h1 class="reveal">Your money, <span class="grad">simple and clear.</span></h1>
             <p class="lede reveal delay-1">
                 {{ config('app.name', 'Life Finance OS') }} brings every part of your financial life into one calm,
                 modern dashboard — so you always know where you stand.
@@ -276,12 +629,12 @@
                     <div class="kpis">
                         <div class="kpi">
                             <b>Total balance</b>
-                            <span>$82,326</span>
+                            <span>ZMW 82,326</span>
                             <em>+8.2% this month</em>
                         </div>
                         <div class="kpi">
                             <b>Monthly inflow</b>
-                            <span>$4,268</span>
+                            <span>ZMW 4,268</span>
                             <em>+3.1% vs last</em>
                         </div>
                         <div class="kpi">
@@ -418,5 +771,44 @@
             <span>Your money, all in one place.</span>
         </div>
     </footer>
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const themeToggle = document.getElementById('theme-toggle');
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            const savedTheme = localStorage.getItem('lf-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+            if (initialDark) {
+                root.setAttribute('data-theme', 'dark');
+            }
+
+            themeToggle?.addEventListener('click', () => {
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                if (isDark) {
+                    root.removeAttribute('data-theme');
+                    localStorage.setItem('lf-theme', 'light');
+                } else {
+                    root.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('lf-theme', 'dark');
+                }
+            });
+
+            menuToggle?.addEventListener('click', () => {
+                const open = mobileMenu?.classList.toggle('open');
+                menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+
+            mobileMenu?.querySelectorAll('a').forEach((link) => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('open');
+                    menuToggle?.setAttribute('aria-expanded', 'false');
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

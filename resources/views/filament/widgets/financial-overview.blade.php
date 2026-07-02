@@ -141,6 +141,32 @@
                 .kpi-value {
                     font-size: 1.6rem;
                 }
+
+                .kpi-card {
+                    padding: 0.9rem 1rem;
+                }
+
+                .kpi-title {
+                    font-size: 0.84rem;
+                }
+
+                .kpi-note {
+                    font-size: 0.83rem;
+                }
+            }
+
+            @media (max-width: 380px) {
+                .kpi-value {
+                    font-size: 1.35rem;
+                }
+
+                .kpi-note {
+                    align-items: flex-start;
+                }
+
+                .kpi-note svg {
+                    margin-top: 0.12rem;
+                }
             }
         </style>
 
