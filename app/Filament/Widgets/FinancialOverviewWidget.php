@@ -2,16 +2,17 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-class FinancialOverviewWidget extends BaseWidget
+class FinancialOverviewWidget extends Widget
 {
+    protected static string $view = 'filament.widgets.financial-overview';
     protected static ?int $sort = 1;
+    protected int | string | array $columnSpan = 'full';
 
-    protected function getStats(): array
+    public function getViewData(): array
     {
         $user = Auth::user();
 
@@ -45,40 +46,57 @@ class FinancialOverviewWidget extends BaseWidget
         $cashFlow = $totalMonthlyIncome - $totalMonthlyExpenses;
 
         return [
-            Stat::make('Total Money I Have', 'ZMW ' . number_format($totalMoney, 2))
-                ->description('Active accounts + active savings')
-                ->descriptionIcon('heroicon-m-wallet')
-                ->color('success'),
-
-            Stat::make('Monthly Income', 'ZMW ' . number_format($totalMonthlyIncome, 2))
-                ->description('All active income sources')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color('success'),
-
-            Stat::make('Monthly Expenses', 'ZMW ' . number_format($totalMonthlyExpenses, 2))
-                ->description('This month\'s spending')
-                ->descriptionIcon('heroicon-m-arrow-trending-down')
-                ->color($totalMonthlyExpenses > $totalMonthlyIncome ? 'danger' : 'warning'),
-
-            Stat::make('Cash Flow', 'ZMW ' . number_format($cashFlow, 2))
-                ->description($cashFlow >= 0 ? 'Positive cash flow' : 'Overspending this month')
-                ->descriptionIcon($cashFlow >= 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-circle')
-                ->color($cashFlow >= 0 ? 'success' : 'danger'),
-
-            Stat::make('Total Debt', 'ZMW ' . number_format($totalDebts, 2))
-                ->description('Outstanding balances')
-                ->descriptionIcon('heroicon-m-credit-card')
-                ->color('danger'),
-
-            Stat::make('Total Savings', 'ZMW ' . number_format($totalSavings, 2))
-                ->description('Across all goals')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color('info'),
-
-            Stat::make('Net Worth', 'ZMW ' . number_format($netWorth, 2))
-                ->description('Assets minus liabilities')
-                ->descriptionIcon('heroicon-m-scale')
-                ->color($netWorth >= 0 ? 'success' : 'danger'),
+            'cards' => [
+                [
+                    'title' => 'Total Money I Have',
+                    'value' => 'ZMW ' . number_format($totalMoney, 2),
+                    'note'  => 'Active accounts + active savings',
+                    'icon'  => 'heroicon-m-wallet',
+                    'theme' => 'mint',
+                ],
+                [
+                    'title' => 'Monthly Income',
+                    'value' => 'ZMW ' . number_format($totalMonthlyIncome, 2),
+                    'note'  => 'All active income sources',
+                    'icon'  => 'heroicon-m-arrow-trending-up',
+                    'theme' => 'blue',
+                ],
+                [
+                    'title' => 'Monthly Expenses',
+                    'value' => 'ZMW ' . number_format($totalMonthlyExpenses, 2),
+                    'note'  => "This month's spending",
+                    'icon'  => 'heroicon-m-arrow-trending-down',
+                    'theme' => 'amber',
+                ],
+                [
+                    'title' => 'Cash Flow',
+                    'value' => 'ZMW ' . number_format($cashFlow, 2),
+                    'note'  => $cashFlow >= 0 ? 'Positive cash flow' : 'Overspending this month',
+                    'icon'  => $cashFlow >= 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-circle',
+                    'theme' => $cashFlow >= 0 ? 'cyan' : 'rose',
+                ],
+                [
+                    'title' => 'Total Debt',
+                    'value' => 'ZMW ' . number_format($totalDebts, 2),
+                    'note'  => 'Outstanding balances',
+                    'icon'  => 'heroicon-m-credit-card',
+                    'theme' => 'rose',
+                ],
+                [
+                    'title' => 'Total Savings',
+                    'value' => 'ZMW ' . number_format($totalSavings, 2),
+                    'note'  => 'Across all goals',
+                    'icon'  => 'heroicon-m-banknotes',
+                    'theme' => 'indigo',
+                ],
+                [
+                    'title' => 'Net Worth',
+                    'value' => 'ZMW ' . number_format($netWorth, 2),
+                    'note'  => 'Assets minus liabilities',
+                    'icon'  => 'heroicon-m-scale',
+                    'theme' => $netWorth >= 0 ? 'mint' : 'rose',
+                ],
+            ],
         ];
     }
 }
