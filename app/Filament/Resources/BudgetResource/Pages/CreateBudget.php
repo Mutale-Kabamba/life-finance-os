@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\BudgetResource\Pages;
 
 use App\Filament\Resources\BudgetResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateBudget extends CreateRecord
 {
@@ -13,5 +13,10 @@ class CreateBudget extends CreateRecord
     {
         $data['user_id'] = auth()->id();
         return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

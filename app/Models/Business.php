@@ -43,6 +43,11 @@ class Business extends Model
         return $this->hasMany(Inventory::class);
     }
 
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
@@ -56,5 +61,30 @@ class Business extends Model
     public function payrollRuns(): HasMany
     {
         return $this->hasMany(PayrollRun::class);
+    }
+
+    public function ledgerAccounts(): HasMany
+    {
+        return $this->hasMany(LedgerAccount::class);
+    }
+
+    public function ledgerCategories(): HasMany
+    {
+        return $this->hasMany(LedgerCategory::class);
+    }
+
+    public function ledgerTransactions(): HasMany
+    {
+        return $this->hasMany(LedgerTransaction::class);
+    }
+
+    public function journalEntries(): HasMany
+    {
+        return $this->hasMany(JournalEntry::class);
+    }
+
+    public function cashAtHand(): HasMany
+    {
+        return $this->hasMany(CashAtHand::class);
     }
 }

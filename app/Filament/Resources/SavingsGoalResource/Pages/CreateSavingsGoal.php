@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\SavingsGoalResource\Pages;
 
 use App\Filament\Resources\SavingsGoalResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateSavingsGoal extends CreateRecord
 {

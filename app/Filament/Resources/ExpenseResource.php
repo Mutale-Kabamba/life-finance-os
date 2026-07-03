@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,7 +18,7 @@ class ExpenseResource extends Resource
     protected static ?string $model = Expense::class;
     protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-down';
     protected static ?string $navigationGroup = 'Personal Finance';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -46,6 +47,9 @@ class ExpenseResource extends Resource
                         'annually'  => 'Annually',
                     ])->default('one_time'),
                 Forms\Components\Toggle::make('is_recurring')->default(false),
+                Forms\Components\Toggle::make('is_mandatory')
+                    ->label('Mandatory commitment')
+                    ->default(false),
                 Forms\Components\TextInput::make('reference')->maxLength(100),
                 Forms\Components\Textarea::make('notes')->columnSpanFull(),
             ])->columns(2),
@@ -62,6 +66,7 @@ class ExpenseResource extends Resource
                 Tables\Columns\TextColumn::make('expense_date')->date()->sortable(),
                 Tables\Columns\TextColumn::make('frequency')->badge(),
                 Tables\Columns\IconColumn::make('is_recurring')->boolean(),
+                Tables\Columns\IconColumn::make('is_mandatory')->label('Mandatory')->boolean(),
             ])
             ->defaultSort('expense_date', 'desc')
             ->filters([
@@ -71,6 +76,32 @@ class ExpenseResource extends Resource
                 Tables\Filters\Filter::make('this_month')
                     ->query(fn (Builder $query) => $query->whereMonth('expense_date', now()->month))
                     ->label('This Month'),
+            ])
+            ->headerActions([
+                CsvActions::export([
+                    'expense_date'   => 'Date',
+                    'name'           => 'Name',
+                    'category.name'  => 'Category',
+                    'amount'         => 'Amount',
+                    'frequency'      => 'Frequency',
+                    'reference'      => 'Reference',
+                ], 'expenses'),
+                CsvActions::import(
+                    Expense::class,
+                    [
+                        'expense_date' => 'Date',
+                        'name'         => 'Name',
+                        'amount'       => 'Amount',
+                        'frequency'    => 'Frequency',
+                        'reference'    => 'Reference',
+                        'notes'        => 'Notes',
+                    ],
+                    fn () => [
+                        'user_id'             => auth()->id(),
+                        'expense_category_id' => ExpenseCategory::query()->value('id'),
+                    ],
+                    ['amount'],
+                ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

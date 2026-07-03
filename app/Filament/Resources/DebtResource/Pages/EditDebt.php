@@ -9,5 +9,16 @@ use Filament\Resources\Pages\EditRecord;
 class EditDebt extends EditRecord
 {
     protected static string $resource = DebtResource::class;
-    protected function getHeaderActions(): array { return [Actions\DeleteAction::make()]; }
+
+    protected function getHeaderActions(): array
+    {
+        return [Actions\DeleteAction::make()];
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        unset($data['outstanding_balance']);
+
+        return $data;
+    }
 }

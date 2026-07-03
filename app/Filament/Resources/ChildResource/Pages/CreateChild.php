@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\ChildResource\Pages;
 
 use App\Filament\Resources\ChildResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateChild extends CreateRecord
 {

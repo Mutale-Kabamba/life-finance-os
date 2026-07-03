@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -21,6 +22,22 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('auth/{provider}/redirect', [GoogleAuthController::class, 'redirect'])
+        ->whereIn('provider', ['google', 'facebook', 'x', 'linkedin-openid', 'github'])
+        ->name('auth.provider.redirect');
+
+    Route::get('auth/{provider}/callback', [GoogleAuthController::class, 'callback'])
+        ->whereIn('provider', ['google', 'facebook', 'x', 'linkedin-openid', 'github'])
+        ->name('auth.provider.callback');
+
+    Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->defaults('provider', 'google')
+        ->name('auth.google.redirect');
+
+    Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->defaults('provider', 'google')
+        ->name('auth.google.callback');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');

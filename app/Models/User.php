@@ -12,19 +12,32 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     use HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
         'email',
+        'google_id',
+        'facebook_id',
+        'twitter_id',
+        'linkedin_id',
+        'github_id',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
+        'google_calendar_id',
+        'google_calendar_sync_token',
+        'google_calendar_connected_at',
         'password',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'google_access_token',
+        'google_refresh_token',
     ];
 
     protected function casts(): array
@@ -32,6 +45,10 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'google_access_token' => 'encrypted',
+            'google_refresh_token' => 'encrypted',
+            'google_token_expires_at' => 'datetime',
+            'google_calendar_connected_at' => 'datetime',
         ];
     }
 
@@ -53,6 +70,11 @@ class User extends Authenticatable implements FilamentUser
     public function incomeSources(): HasMany
     {
         return $this->hasMany(IncomeSource::class);
+    }
+
+    public function incomeReceipts(): HasMany
+    {
+        return $this->hasMany(IncomeReceipt::class);
     }
 
     public function expenses(): HasMany
@@ -78,6 +100,16 @@ class User extends Authenticatable implements FilamentUser
     public function receivables(): HasMany
     {
         return $this->hasMany(Receivable::class);
+    }
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class);
+    }
+
+    public function accountTransactions(): HasMany
+    {
+        return $this->hasMany(AccountTransaction::class);
     }
 
     public function investments(): HasMany
@@ -108,6 +140,16 @@ class User extends Authenticatable implements FilamentUser
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function financialCalendarEntries(): HasMany
+    {
+        return $this->hasMany(FinancialCalendar::class);
+    }
+
+    public function googleCalendarEventMappings(): HasMany
+    {
+        return $this->hasMany(GoogleCalendarEventMapping::class);
     }
 
     public function getTotalMonthlyIncomeAttribute(): float

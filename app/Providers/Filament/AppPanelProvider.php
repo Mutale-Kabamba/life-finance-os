@@ -2,17 +2,19 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login as AuthLogin;
+use App\Filament\Pages\Auth\Register as AuthRegister;
 use App\Http\Middleware\EnsureOnboardingComplete;
+use App\Filament\Pages\Dashboard as AppDashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,11 +30,15 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('dashboard')
-            ->login()
-            ->registration()
+            ->login(AuthLogin::class)
+            ->registration(AuthRegister::class)
             ->passwordReset()
             ->emailVerification()
             ->profile()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
+            )
             ->colors([
                 'primary' => Color::Emerald,
                 'danger'  => Color::Rose,
@@ -42,21 +48,19 @@ class AppPanelProvider extends PanelProvider
             ])
             ->brandName('Life Finance OS')
             ->navigationGroups([
-                NavigationGroup::make('Personal Finance')->icon('heroicon-o-user'),
-                NavigationGroup::make('Family')->icon('heroicon-o-home'),
-                NavigationGroup::make('Business Finance')->icon('heroicon-o-building-office-2'),
-                NavigationGroup::make('Wealth Building')->icon('heroicon-o-chart-bar-square'),
-                NavigationGroup::make('Settings')->icon('heroicon-o-cog-6-tooth'),
+                NavigationGroup::make('Personal Finance'),
+                NavigationGroup::make('Family'),
+                NavigationGroup::make('Business Finance'),
+                NavigationGroup::make('Wealth Building'),
+                NavigationGroup::make('Settings'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                AppDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

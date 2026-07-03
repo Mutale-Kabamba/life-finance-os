@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\IncomeSourceResource\Pages;
 
 use App\Filament\Resources\IncomeSourceResource;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Resources\Pages\CreateRecord;
 
 class CreateIncomeSource extends CreateRecord
 {
