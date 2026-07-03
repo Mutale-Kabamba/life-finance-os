@@ -41,6 +41,12 @@ class GoogleAuthController extends Controller
     {
         $driver = $this->resolveDriver($provider);
 
+        if ($provider === 'facebook') {
+            return Socialite::driver($driver)
+                ->setScopes(['public_profile'])
+                ->redirect();
+        }
+
         return Socialite::driver($driver)->redirect();
     }
 
@@ -53,16 +59,15 @@ class GoogleAuthController extends Controller
     {
         $driver = $this->resolveDriver($provider);
         $socialUser = Socialite::driver($driver)->stateless()->user();
+        $providerUserId = (string) $socialUser->getId();
         $email = $socialUser->getEmail();
 
         if (blank($email)) {
-            throw ValidationException::withMessages([
-                'email' => __(ucfirst($provider) . ' account did not provide an email address.'),
-            ]);
+            // Some providers (notably Facebook in local/dev setups) may not return email.
+            $email = $provider . '_' . $providerUserId . '@oauth.local';
         }
 
         $providerColumn = $this->providerIdColumns[$provider];
-        $providerUserId = $socialUser->getId();
 
         $user = User::query()
             ->where($providerColumn, $providerUserId)
