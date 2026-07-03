@@ -13,45 +13,73 @@ use Laravel\Socialite\Facades\Socialite;
 class GoogleAuthController extends Controller
 {
     /**
-     * Redirect the user to Google's authentication page.
+     * @var array<string, string>
      */
-    public function redirect(): RedirectResponse
+    private array $providerIdColumns = [
+        'google' => 'google_id',
+        'facebook' => 'facebook_id',
+        'x' => 'twitter_id',
+        'linkedin-openid' => 'linkedin_id',
+        'github' => 'github_id',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private array $socialiteDriverMap = [
+        'google' => 'google',
+        'facebook' => 'facebook',
+        'x' => 'x',
+        'linkedin-openid' => 'linkedin-openid',
+        'github' => 'github',
+    ];
+
+    /**
+     * Redirect the user to the selected provider's authentication page.
+     */
+    public function redirect(string $provider): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        $driver = $this->resolveDriver($provider);
+
+        return Socialite::driver($driver)->redirect();
     }
 
     /**
-     * Handle callback from Google authentication.
+     * Handle callback from OAuth provider authentication.
      *
      * @throws ValidationException
      */
-    public function callback(): RedirectResponse
+    public function callback(string $provider): RedirectResponse
     {
-        $googleUser = Socialite::driver('google')->stateless()->user();
-        $email = $googleUser->getEmail();
+        $driver = $this->resolveDriver($provider);
+        $socialUser = Socialite::driver($driver)->stateless()->user();
+        $email = $socialUser->getEmail();
 
         if (blank($email)) {
             throw ValidationException::withMessages([
-                'email' => __('Google account did not provide an email address.'),
+                'email' => __(ucfirst($provider) . ' account did not provide an email address.'),
             ]);
         }
 
+        $providerColumn = $this->providerIdColumns[$provider];
+        $providerUserId = $socialUser->getId();
+
         $user = User::query()
-            ->where('google_id', $googleUser->getId())
+            ->where($providerColumn, $providerUserId)
             ->orWhere('email', $email)
             ->first();
 
         if ($user) {
             $user->forceFill([
-                'name' => $googleUser->getName() ?: $user->name,
-                'google_id' => $googleUser->getId(),
+                'name' => $socialUser->getName() ?: $user->name,
+                $providerColumn => $providerUserId,
                 'email_verified_at' => $user->email_verified_at ?? now(),
             ])->save();
         } else {
             $user = User::create([
-                'name' => $googleUser->getName() ?: Str::before($email, '@'),
+                'name' => $socialUser->getName() ?: Str::before($email, '@'),
                 'email' => $email,
-                'google_id' => $googleUser->getId(),
+                $providerColumn => $providerUserId,
                 'password' => Str::random(64),
             ]);
 
@@ -63,5 +91,14 @@ class GoogleAuthController extends Controller
         Auth::login($user, remember: true);
 
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    private function resolveDriver(string $provider): string
+    {
+        if (! array_key_exists($provider, $this->socialiteDriverMap)) {
+            abort(404);
+        }
+
+        return $this->socialiteDriverMap[$provider];
     }
 }

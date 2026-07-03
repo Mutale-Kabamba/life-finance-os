@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login as AuthLogin;
+use App\Filament\Pages\Auth\Register as AuthRegister;
 use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Filament\Pages\Dashboard as AppDashboard;
 use Filament\Http\Middleware\Authenticate;
@@ -12,6 +14,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -27,11 +30,15 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
-            ->registration()
+            ->login(AuthLogin::class)
+            ->registration(AuthRegister::class)
             ->passwordReset()
             ->emailVerification()
             ->profile()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
+            )
             ->colors([
                 'primary' => Color::Emerald,
                 'danger'  => Color::Rose,
