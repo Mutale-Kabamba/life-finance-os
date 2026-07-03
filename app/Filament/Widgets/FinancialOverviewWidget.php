@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Services\FinancialIntelligenceService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,7 @@ class FinancialOverviewWidget extends Widget
     public function getViewData(): array
     {
         $user = Auth::user();
+        $analysis = app(FinancialIntelligenceService::class)->analyze($user);
 
         $totalAccountsBalance = 0.0;
         if (Schema::hasTable('accounts')) {
@@ -23,13 +25,9 @@ class FinancialOverviewWidget extends Widget
                 ->sum('current_balance');
         }
 
-        $totalMonthlyIncome = $user->incomeSources()
-            ->where('is_active', true)->get()
-            ->sum(fn ($s) => $s->monthly_amount);
+        $totalMonthlyIncome = (float) $analysis['monthly_expected_income'];
 
-        $totalMonthlyExpenses = $user->expenses()
-            ->whereMonth('expense_date', now()->month)
-            ->sum('amount');
+        $totalMonthlyExpenses = (float) $analysis['monthly_recurring_expenses'];
 
         $totalDebts = $user->debts()
             ->where('status', 'active')
@@ -39,7 +37,7 @@ class FinancialOverviewWidget extends Widget
             ->where('status', 'active')
             ->sum('current_amount');
 
-        $totalMoney = $totalAccountsBalance + (float) $totalSavings;
+        $totalMoney = (float) $analysis['available_cash'];
 
         $netWorth = $user->net_worth;
 
@@ -64,7 +62,7 @@ class FinancialOverviewWidget extends Widget
                 [
                     'title' => 'Monthly Expenses',
                     'value' => 'ZMW ' . number_format($totalMonthlyExpenses, 2),
-                    'note'  => "This month's spending",
+                    'note'  => 'Recurring obligations (monthly equivalent)',
                     'icon'  => 'heroicon-m-arrow-trending-down',
                     'theme' => 'amber',
                 ],

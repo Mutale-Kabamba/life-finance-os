@@ -24,12 +24,20 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'twitter_id',
         'linkedin_id',
         'github_id',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
+        'google_calendar_id',
+        'google_calendar_sync_token',
+        'google_calendar_connected_at',
         'password',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'google_access_token',
+        'google_refresh_token',
     ];
 
     protected function casts(): array
@@ -37,6 +45,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'google_access_token' => 'encrypted',
+            'google_refresh_token' => 'encrypted',
+            'google_token_expires_at' => 'datetime',
+            'google_calendar_connected_at' => 'datetime',
         ];
     }
 
@@ -128,6 +140,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function financialCalendarEntries(): HasMany
+    {
+        return $this->hasMany(FinancialCalendar::class);
+    }
+
+    public function googleCalendarEventMappings(): HasMany
+    {
+        return $this->hasMany(GoogleCalendarEventMapping::class);
     }
 
     public function getTotalMonthlyIncomeAttribute(): float

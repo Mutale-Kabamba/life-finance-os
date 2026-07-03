@@ -47,6 +47,13 @@ class IncomeReceiptResource extends Resource
                 Forms\Components\TextInput::make('amount')
                     ->required()->numeric()->prefix('ZMW')->minValue(0.01),
                 Forms\Components\DatePicker::make('received_date')->default(now())->required(),
+                Forms\Components\Select::make('account_id')
+                    ->label('Deposit to account')
+                    ->relationship('account', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true))
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->helperText('Optional. If blank, the system credits your default cash account.'),
                 Forms\Components\TextInput::make('method')->label('Method')
                     ->placeholder('Cash, bank, mobile money...')->maxLength(50),
                 Forms\Components\TextInput::make('reference')->maxLength(255),
@@ -65,6 +72,7 @@ class IncomeReceiptResource extends Resource
                 Tables\Columns\TextColumn::make('source.name')->label('Source')->placeholder('One-off')->toggleable(),
                 Tables\Columns\TextColumn::make('amount')->money('ZMW')->sortable()
                     ->summarize(Tables\Columns\Summarizers\Sum::make()->money('ZMW')),
+                Tables\Columns\TextColumn::make('account.name')->label('Account')->placeholder('Auto')->toggleable(),
                 Tables\Columns\TextColumn::make('method')->toggleable(),
                 Tables\Columns\TextColumn::make('reference')->searchable()->toggleable(isToggledHiddenByDefault: true),
             ])

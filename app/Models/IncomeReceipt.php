@@ -13,7 +13,8 @@ class IncomeReceipt extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'income_source_id', 'receivable_payment_id', 'name', 'amount',
+        'user_id', 'income_source_id', 'account_id', 'account_transaction_id',
+        'receivable_payment_id', 'name', 'amount',
         'received_date', 'method', 'reference', 'notes',
     ];
 
@@ -38,5 +39,15 @@ class IncomeReceipt extends Model
     public function receivablePayment(): BelongsTo
     {
         return $this->belongsTo(ReceivablePayment::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    public function accountTransaction(): BelongsTo
+    {
+        return $this->belongsTo(AccountTransaction::class);
     }
 }

@@ -39,6 +39,13 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'calendar_name' => env('GOOGLE_CALENDAR_NAME', 'Life Finance OS'),
+        'scopes' => [
+            'openid',
+            'profile',
+            'email',
+            'https://www.googleapis.com/auth/calendar',
+        ],
     ],
 
     'facebook' => [

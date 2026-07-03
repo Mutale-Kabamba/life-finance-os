@@ -120,6 +120,10 @@ class IncomeSourceResource extends Resource
                             ->numeric()->prefix('ZMW')->required()->minValue(0.01)
                             ->default(fn (IncomeSource $record) => (float) $record->amount),
                         Forms\Components\DatePicker::make('received_date')->default(now())->required(),
+                        Forms\Components\Select::make('account_id')
+                            ->label('Deposit to account')
+                            ->relationship('account', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true))
+                            ->searchable()->preload()->nullable(),
                         Forms\Components\TextInput::make('method')->label('Method')
                             ->placeholder('Cash, bank, mobile money...')->maxLength(50),
                         Forms\Components\TextInput::make('reference')->maxLength(255),
@@ -129,6 +133,7 @@ class IncomeSourceResource extends Resource
                         IncomeReceipt::create([
                             'user_id'          => auth()->id(),
                             'income_source_id' => $record->id,
+                            'account_id'       => $data['account_id'] ?? null,
                             'name'             => $record->name,
                             'amount'           => $data['amount'],
                             'received_date'    => $data['received_date'],

@@ -14,13 +14,14 @@ class Expense extends Model
 
     protected $fillable = [
         'user_id', 'expense_category_id', 'name', 'amount',
-        'expense_date', 'frequency', 'is_recurring', 'reference', 'notes',
+        'expense_date', 'frequency', 'is_recurring', 'is_mandatory', 'reference', 'notes',
     ];
 
     protected $casts = [
         'amount'       => 'decimal:2',
         'expense_date' => 'date',
         'is_recurring' => 'boolean',
+        'is_mandatory' => 'boolean',
     ];
 
     public function user(): BelongsTo

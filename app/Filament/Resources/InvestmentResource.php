@@ -69,7 +69,7 @@ class InvestmentResource extends Resource
                     ->suffix('%')
                     ->color(fn ($record) => $record->return_amount >= 0 ? 'success' : 'danger'),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->colors(['success' => 'active', 'info' => 'matured', 'gray' => fn ($s) => in_array($s, ['sold', 'cancelled'])]),
+                    ->colors(['success' => 'active', 'info' => 'matured', 'gray' => fn ($state) => in_array($state, ['sold', 'cancelled'], true)]),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type'),

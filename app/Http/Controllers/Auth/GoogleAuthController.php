@@ -47,6 +47,26 @@ class GoogleAuthController extends Controller
                 ->redirect();
         }
 
+        if ($provider === 'google') {
+            $googleDriver = Socialite::driver($driver);
+
+            if (method_exists($googleDriver, 'scopes')) {
+                $googleDriver = $googleDriver->scopes(config('services.google.scopes', []));
+            } elseif (method_exists($googleDriver, 'setScopes')) {
+                $googleDriver = $googleDriver->setScopes(config('services.google.scopes', []));
+            }
+
+            if (method_exists($googleDriver, 'with')) {
+                $googleDriver = $googleDriver->with([
+                    'access_type' => 'offline',
+                    'prompt' => 'consent',
+                    'include_granted_scopes' => 'true',
+                ]);
+            }
+
+            return $googleDriver->redirect();
+        }
+
         return Socialite::driver($driver)->redirect();
     }
 
@@ -58,7 +78,21 @@ class GoogleAuthController extends Controller
     public function callback(string $provider): RedirectResponse
     {
         $driver = $this->resolveDriver($provider);
-        $socialUser = Socialite::driver($driver)->stateless()->user();
+
+        if ($provider === 'google') {
+            $googleDriver = Socialite::driver($driver);
+
+            if (method_exists($googleDriver, 'scopes')) {
+                $googleDriver = $googleDriver->scopes(config('services.google.scopes', []));
+            } elseif (method_exists($googleDriver, 'setScopes')) {
+                $googleDriver = $googleDriver->setScopes(config('services.google.scopes', []));
+            }
+
+            $socialUser = $googleDriver->stateless()->user();
+        } else {
+            $socialUser = Socialite::driver($driver)->stateless()->user();
+        }
+
         $providerUserId = (string) $socialUser->getId();
         $email = $socialUser->getEmail();
 
@@ -75,18 +109,30 @@ class GoogleAuthController extends Controller
             ->first();
 
         if ($user) {
-            $user->forceFill([
+            $payload = [
                 'name' => $socialUser->getName() ?: $user->name,
                 $providerColumn => $providerUserId,
                 'email_verified_at' => $user->email_verified_at ?? now(),
-            ])->save();
+            ];
+
+            if ($provider === 'google') {
+                $payload = array_merge($payload, $this->googleTokenPayload($socialUser, $user));
+            }
+
+            $user->forceFill($payload)->save();
         } else {
-            $user = User::create([
+            $payload = [
                 'name' => $socialUser->getName() ?: Str::before($email, '@'),
                 'email' => $email,
                 $providerColumn => $providerUserId,
                 'password' => Str::random(64),
-            ]);
+            ];
+
+            if ($provider === 'google') {
+                $payload = array_merge($payload, $this->googleTokenPayload($socialUser, null));
+            }
+
+            $user = User::create($payload);
 
             $user->forceFill([
                 'email_verified_at' => now(),
@@ -105,5 +151,22 @@ class GoogleAuthController extends Controller
         }
 
         return $this->socialiteDriverMap[$provider];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function googleTokenPayload(object $socialUser, ?User $existingUser): array
+    {
+        $token = $socialUser->token ?? null;
+        $refreshToken = $socialUser->refreshToken ?? null;
+        $expiresIn = $socialUser->expiresIn ?? null;
+
+        return [
+            'google_access_token' => $token,
+            'google_refresh_token' => $refreshToken ?: $existingUser?->google_refresh_token,
+            'google_token_expires_at' => is_numeric($expiresIn) ? now()->addSeconds((int) $expiresIn) : null,
+            'google_calendar_connected_at' => now(),
+        ];
     }
 }
