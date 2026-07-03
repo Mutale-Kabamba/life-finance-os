@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Filament\Clusters\BusinessReports;
 use App\Models\Business;
 use App\Services\Accounting\LedgerSummaryService;
 use Filament\Actions\Action;
@@ -18,6 +19,7 @@ class FinancialReports extends Page implements HasForms
 {
     use InteractsWithForms;
 
+    protected static ?string $cluster = BusinessReports::class;
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationGroup = 'Business Finance';
     protected static ?string $navigationLabel = 'Financial Reports';

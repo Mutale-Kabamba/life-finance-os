@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\BusinessSetup;
 use App\Filament\Resources\BusinessResource\Pages;
 use App\Models\Business;
 use Filament\Forms;
@@ -14,8 +15,10 @@ use Illuminate\Database\Eloquent\Builder;
 class BusinessResource extends Resource
 {
     protected static ?string $model = Business::class;
+    protected static ?string $cluster = BusinessSetup::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationLabel = 'Businesses';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

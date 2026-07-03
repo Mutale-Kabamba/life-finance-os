@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Filament\Clusters\BusinessOperations;
 use App\Models\Business;
 use App\Models\Customer;
 use App\Models\Inventory;
@@ -29,6 +30,7 @@ class PointOfSale extends Page implements HasForms
 {
     use InteractsWithForms;
 
+    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?string $navigationGroup = 'Business Finance';
     protected static ?string $navigationLabel = 'Point of Sale';
@@ -136,10 +138,14 @@ class PointOfSale extends Page implements HasForms
         $state = $this->form->getState();
 
         try {
+            $customerId = filled($state['customer_id'] ?? null)
+                ? (int) $state['customer_id']
+                : null;
+
             $result = app(PointOfSaleService::class)->checkout([
                 'business_id'    => (int) $state['business_id'],
                 'user_id'        => (int) auth()->id(),
-                'customer_id'    => $state['customer_id'] ?? null,
+                'customer_id'    => $customerId,
                 'date'           => $state['date'] ?? now()->toDateString(),
                 'items'          => $state['items'] ?? [],
                 'create_invoice' => (bool) ($state['create_invoice'] ?? false),

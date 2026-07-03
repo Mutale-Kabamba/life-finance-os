@@ -104,9 +104,11 @@ class PointOfSaleService
             $this->postCostOfSales($businessId, $userId, $date, $reference, $costTotal);
 
             if (! empty($data['create_invoice'])) {
+                $customerId = $this->normalizeNullableInt($data['customer_id'] ?? null);
+
                 $this->createInvoice(
                     $businessId,
-                    $data['customer_id'] ?? null,
+                    $customerId,
                     $date,
                     $reference,
                     $invoiceLines,
@@ -211,5 +213,14 @@ class PointOfSaleService
             ->count('reference');
 
         return sprintf('POS-%d-%04d', $year, $count + 1);
+    }
+
+    private function normalizeNullableInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
     }
 }

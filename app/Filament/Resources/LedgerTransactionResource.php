@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\BusinessOperations;
 use App\Filament\Resources\LedgerTransactionResource\Pages;
 use App\Models\Business;
 use App\Models\LedgerAccount;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 class LedgerTransactionResource extends Resource
 {
     protected static ?string $model = LedgerTransaction::class;
+    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
     protected static ?string $navigationGroup = 'Business Finance';
     protected static ?string $navigationLabel = 'Transactions';
