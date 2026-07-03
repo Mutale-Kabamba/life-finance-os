@@ -4,12 +4,12 @@ namespace App\Support;
 
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Str;
 
 class InvoicePdfBuilder
 {
-    public function download(Invoice $invoice): Response
+    public function download(Invoice $invoice): StreamedResponse
     {
         $invoice->loadMissing(['business', 'customer', 'items']);
 
@@ -21,7 +21,11 @@ class InvoicePdfBuilder
             'documentType' => $documentType,
         ])->setPaper('a4');
 
-        return $pdf->download($fileName);
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            $fileName,
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     private function buildFileName(Invoice $invoice, string $documentType): string

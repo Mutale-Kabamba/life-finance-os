@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Clusters\BusinessDocuments;
 use App\Filament\Resources\QuotationResource\Pages;
 use App\Models\Invoice;
+use App\Support\BusinessDocumentForm;
 use App\Support\InvoicePdfBuilder;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -60,25 +61,9 @@ class QuotationResource extends Resource
                     ->default('draft'),
             ])->columns(2),
 
-            Forms\Components\Section::make('Line Items')->schema([
-                Forms\Components\Repeater::make('items')
-                    ->relationship()
-                    ->schema([
-                        Forms\Components\TextInput::make('description')->required()->columnSpan(3),
-                        Forms\Components\TextInput::make('quantity')->numeric()->required()->default(1),
-                        Forms\Components\TextInput::make('unit_price')->numeric()->required()->prefix('ZMW'),
-                        Forms\Components\TextInput::make('total_price')->numeric()->prefix('ZMW')->disabled(),
-                    ])->columns(6),
-            ]),
+            BusinessDocumentForm::lineItemsSection(),
 
-            Forms\Components\Section::make('Totals')->schema([
-                Forms\Components\TextInput::make('subtotal')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('tax_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('discount_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('total_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('amount_paid')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\Textarea::make('notes')->columnSpanFull(),
-            ])->columns(2),
+            BusinessDocumentForm::totalsSection(),
         ]);
     }
 
