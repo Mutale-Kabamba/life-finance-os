@@ -7,6 +7,8 @@ use App\Models\Debt;
 use App\Models\DebtPayment;
 use App\Support\CsvActions;
 use Filament\Forms;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -40,15 +42,53 @@ class DebtResource extends Resource
                         'other'         => 'Other',
                     ]),
                 Forms\Components\TextInput::make('original_amount')
-                    ->required()->numeric()->prefix('ZMW'),
+                    ->label('Loan amount (principal)')
+                    ->required()->numeric()->prefix('ZMW')->minValue(0)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Set $set, Get $get): void {
+                        if (self::floatValue($get('outstanding_balance')) <= 0) {
+                            $set('outstanding_balance', $get('original_amount'));
+                        }
+
+                        self::syncLoanAmounts($set, $get, 'original_amount');
+                    }),
                 Forms\Components\TextInput::make('outstanding_balance')
-                    ->required()->numeric()->prefix('ZMW'),
+                    ->label('Outstanding balance')
+                    ->numeric()->prefix('ZMW')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Auto-managed by principal and recorded payments.'),
                 Forms\Components\TextInput::make('monthly_installment')
-                    ->required()->numeric()->prefix('ZMW'),
+                    ->label('Installment amount')
+                    ->numeric()->prefix('ZMW')->default(0)->minValue(0)
+                    ->helperText('Amount paid per repayment cycle.'),
+                Forms\Components\Select::make('repayment_frequency')
+                    ->label('Repayment frequency')
+                    ->options([
+                        'daily' => 'Daily',
+                        'weekly' => 'Weekly',
+                        'bi_weekly' => 'Bi-weekly',
+                        'monthly' => 'Monthly',
+                    ])
+                    ->placeholder('Flexible / not fixed')
+                    ->native(false),
                 Forms\Components\TextInput::make('interest_rate')
-                    ->numeric()->suffix('%')->default(0),
-                Forms\Components\DatePicker::make('start_date'),
-                Forms\Components\DatePicker::make('due_date'),
+                    ->label('Interest percentage')
+                    ->numeric()->suffix('%')->default(0)->minValue(0)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Set $set, Get $get): void {
+                        self::syncLoanAmounts($set, $get, 'interest_rate');
+                    }),
+                Forms\Components\TextInput::make('total_repayment_amount')
+                    ->label('Total repayment amount')
+                    ->numeric()->prefix('ZMW')->minValue(0)
+                    ->live(onBlur: true)
+                    ->helperText('Optional. If provided, interest percentage is auto-derived.')
+                    ->afterStateUpdated(function (Set $set, Get $get): void {
+                        self::syncLoanAmounts($set, $get, 'total_repayment_amount');
+                    }),
+                Forms\Components\DatePicker::make('start_date')->label('Date borrowed'),
+                Forms\Components\DatePicker::make('due_date')->label('Expected repayment date'),
                 Forms\Components\TextInput::make('account_number')->maxLength(100),
                 Forms\Components\Select::make('status')
                     ->options(['active' => 'Active', 'paid_off' => 'Paid Off', 'defaulted' => 'Defaulted', 'restructured' => 'Restructured'])
@@ -66,7 +106,9 @@ class DebtResource extends Resource
                 Tables\Columns\TextColumn::make('type')->badge(),
                 Tables\Columns\TextColumn::make('outstanding_balance')->money('ZMW')->sortable(),
                 Tables\Columns\TextColumn::make('monthly_installment')->money('ZMW'),
+                Tables\Columns\TextColumn::make('repayment_frequency')->badge()->placeholder('Flexible'),
                 Tables\Columns\TextColumn::make('interest_rate')->suffix('%'),
+                Tables\Columns\TextColumn::make('total_repayment_amount')->money('ZMW')->label('Total repayment'),
                 Tables\Columns\TextColumn::make('due_date')->date()->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors(['danger' => 'active', 'success' => 'paid_off', 'warning' => 'restructured', 'gray' => 'defaulted']),
@@ -83,7 +125,9 @@ class DebtResource extends Resource
                     'original_amount'     => 'Original Amount',
                     'outstanding_balance' => 'Outstanding',
                     'monthly_installment' => 'Monthly Installment',
+                    'repayment_frequency' => 'Repayment Frequency',
                     'interest_rate'       => 'Interest Rate',
+                    'total_repayment_amount' => 'Total Repayment',
                     'due_date'            => 'Due Date',
                     'status'              => 'Status',
                 ], 'debts'),
@@ -95,11 +139,13 @@ class DebtResource extends Resource
                         'original_amount'     => 'Original Amount',
                         'outstanding_balance' => 'Outstanding',
                         'monthly_installment' => 'Monthly Installment',
+                        'repayment_frequency' => 'Repayment Frequency',
                         'interest_rate'       => 'Interest Rate',
+                        'total_repayment_amount' => 'Total Repayment',
                         'notes'               => 'Notes',
                     ],
                     fn () => ['user_id' => auth()->id(), 'status' => 'active'],
-                    ['original_amount', 'outstanding_balance', 'monthly_installment', 'interest_rate'],
+                    ['original_amount', 'outstanding_balance', 'monthly_installment', 'interest_rate', 'total_repayment_amount'],
                 ),
             ])
             ->actions([
@@ -170,5 +216,37 @@ class DebtResource extends Resource
             'create' => Pages\CreateDebt::route('/create'),
             'edit'   => Pages\EditDebt::route('/{record}/edit'),
         ];
+    }
+
+    private static function syncLoanAmounts(Set $set, Get $get, string $changedField): void
+    {
+        $principal = self::floatValue($get('original_amount'));
+        if ($principal <= 0) {
+            return;
+        }
+
+        $interest = self::floatValue($get('interest_rate'));
+        $total = self::floatValue($get('total_repayment_amount'));
+
+        if ($changedField === 'total_repayment_amount' && $total > 0) {
+            $derivedInterest = (($total - $principal) / $principal) * 100;
+            $set('interest_rate', round(max(0, $derivedInterest), 2));
+
+            return;
+        }
+
+        if ($interest >= 0) {
+            $derivedTotal = $principal * (1 + ($interest / 100));
+            $set('total_repayment_amount', round($derivedTotal, 2));
+        }
+    }
+
+    private static function floatValue(mixed $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        return (float) str_replace(',', '', (string) $value);
     }
 }

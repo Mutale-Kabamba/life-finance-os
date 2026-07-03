@@ -47,6 +47,9 @@ class ExpenseResource extends Resource
                         'annually'  => 'Annually',
                     ])->default('one_time'),
                 Forms\Components\Toggle::make('is_recurring')->default(false),
+                Forms\Components\Toggle::make('is_mandatory')
+                    ->label('Mandatory commitment')
+                    ->default(false),
                 Forms\Components\TextInput::make('reference')->maxLength(100),
                 Forms\Components\Textarea::make('notes')->columnSpanFull(),
             ])->columns(2),
@@ -63,6 +66,7 @@ class ExpenseResource extends Resource
                 Tables\Columns\TextColumn::make('expense_date')->date()->sortable(),
                 Tables\Columns\TextColumn::make('frequency')->badge(),
                 Tables\Columns\IconColumn::make('is_recurring')->boolean(),
+                Tables\Columns\IconColumn::make('is_mandatory')->label('Mandatory')->boolean(),
             ])
             ->defaultSort('expense_date', 'desc')
             ->filters([

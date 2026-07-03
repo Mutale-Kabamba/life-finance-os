@@ -183,38 +183,46 @@ class OnboardingWizard extends Page implements HasForms
     protected function incomeStep(): Step
     {
         return Step::make('Income')
-            ->description('Your main income')
+            ->description('Stable and predictable income sources')
             ->icon('heroicon-o-banknotes')
             ->schema([
-                Section::make('Main income source')
-                    ->description('Add your primary income. Other sources can be added later.')
-                    ->columns(2)
+                Section::make('Expected recurring income')
+                    ->description('Add all reliable income streams used for budgeting and forecasting.')
                     ->schema([
-                        TextInput::make('income.name')
-                            ->label('Source name')
-                            ->placeholder('e.g. Salary — ABC Ltd')
-                            ->maxLength(255),
-                        Select::make('income.type')
-                            ->label('Type')
-                            ->options([
-                                'salary' => 'Salary', 'business' => 'Business',
-                                'freelancing' => 'Freelancing', 'farming' => 'Farming',
-                                'rental' => 'Rental', 'investment' => 'Investment',
-                                'side_hustle' => 'Side hustle', 'pension' => 'Pension',
-                                'other' => 'Other',
-                            ])
-                            ->default('salary')
-                            ->native(false),
-                        TextInput::make('income.amount')
-                            ->label('Amount')
-                            ->numeric()
-                            ->prefix('ZMW')
-                            ->minValue(0),
-                        Select::make('income.frequency')
-                            ->label('Frequency')
-                            ->options($this->frequencyOptions())
-                            ->default('monthly')
-                            ->native(false),
+                        Repeater::make('income_sources')
+                            ->label('Income sources')
+                            ->addActionLabel('Add income source')
+                            ->default([])
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Source name')
+                                    ->placeholder('e.g. Salary - ABC Ltd')
+                                    ->required()
+                                    ->maxLength(255),
+                                Select::make('type')
+                                    ->label('Type')
+                                    ->options([
+                                        'salary' => 'Salary', 'business' => 'Business',
+                                        'freelancing' => 'Freelancing', 'farming' => 'Farming',
+                                        'rental' => 'Rental', 'investment' => 'Investment',
+                                        'allowance' => 'Allowance', 'pension' => 'Pension',
+                                        'side_hustle' => 'Side hustle', 'other' => 'Other',
+                                    ])
+                                    ->default('salary')
+                                    ->native(false),
+                                TextInput::make('amount')
+                                    ->label('Amount')
+                                    ->numeric()
+                                    ->prefix('ZMW')
+                                    ->required()
+                                    ->minValue(0),
+                                Select::make('frequency')
+                                    ->label('Frequency')
+                                    ->options($this->frequencyOptions())
+                                    ->default('monthly')
+                                    ->native(false),
+                            ]),
                     ]),
             ]);
     }
@@ -222,32 +230,44 @@ class OnboardingWizard extends Page implements HasForms
     protected function expensesStep(): Step
     {
         return Step::make('Expenses')
-            ->description('A recurring expense')
+            ->description('Recurring and mandatory obligations')
             ->icon('heroicon-o-receipt-percent')
             ->schema([
-                Section::make('Main recurring expense')
-                    ->description('Add your biggest recurring cost. Others can be added later.')
-                    ->columns(2)
+                Section::make('Recurring commitments')
+                    ->description('Register rent, utilities, subscriptions, school fees, transport, and other commitments.')
                     ->schema([
-                        TextInput::make('expense.name')
-                            ->label('Expense name')
-                            ->placeholder('e.g. Rent')
-                            ->maxLength(255),
-                        Select::make('expense.expense_category_id')
-                            ->label('Category')
-                            ->options(fn (): array => ExpenseCategory::query()->orderBy('name')->pluck('name', 'id')->all())
-                            ->searchable()
-                            ->native(false),
-                        TextInput::make('expense.amount')
-                            ->label('Amount')
-                            ->numeric()
-                            ->prefix('ZMW')
-                            ->minValue(0),
-                        Select::make('expense.frequency')
-                            ->label('Frequency')
-                            ->options(['one_time' => 'One time'] + $this->frequencyOptions())
-                            ->default('monthly')
-                            ->native(false),
+                        Repeater::make('recurring_expenses')
+                            ->label('Recurring expenses')
+                            ->addActionLabel('Add recurring expense')
+                            ->default([])
+                            ->columns(2)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Expense name')
+                                    ->placeholder('e.g. Rent')
+                                    ->required()
+                                    ->maxLength(255),
+                                Select::make('expense_category_id')
+                                    ->label('Category')
+                                    ->options(fn (): array => ExpenseCategory::query()->orderBy('name')->pluck('name', 'id')->all())
+                                    ->searchable()
+                                    ->native(false)
+                                    ->required(),
+                                TextInput::make('amount')
+                                    ->label('Amount')
+                                    ->numeric()
+                                    ->prefix('ZMW')
+                                    ->required()
+                                    ->minValue(0),
+                                Select::make('frequency')
+                                    ->label('Frequency')
+                                    ->options($this->frequencyOptions())
+                                    ->default('monthly')
+                                    ->native(false),
+                                Toggle::make('is_mandatory')
+                                    ->label('Mandatory commitment')
+                                    ->default(true),
+                            ]),
                     ]),
             ]);
     }
@@ -352,17 +372,54 @@ class OnboardingWizard extends Page implements HasForms
                             ->default('personal_loan')
                             ->native(false),
                         TextInput::make('outstanding_balance')
-                            ->label('Outstanding balance')
+                            ->label('Loan amount (principal)')
                             ->numeric()
                             ->prefix('ZMW')
                             ->required()
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'outstanding_balance');
+                            }),
                         TextInput::make('monthly_installment')
-                            ->label('Monthly installment')
+                            ->label('Installment amount')
                             ->numeric()
                             ->prefix('ZMW')
                             ->default(0)
                             ->minValue(0),
+                        Select::make('repayment_frequency')
+                            ->label('Repayment frequency')
+                            ->options([
+                                'daily' => 'Daily',
+                                'weekly' => 'Weekly',
+                                'bi_weekly' => 'Bi-weekly',
+                                'monthly' => 'Monthly',
+                            ])
+                            ->placeholder('Flexible / not fixed')
+                            ->native(false),
+                        TextInput::make('interest_rate')
+                            ->label('Interest percentage')
+                            ->numeric()
+                            ->suffix('%')
+                            ->default(0)
+                            ->minValue(0)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'interest_rate');
+                            }),
+                        TextInput::make('total_repayment_amount')
+                            ->label('Total repayment amount')
+                            ->numeric()
+                            ->prefix('ZMW')
+                            ->minValue(0)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'total_repayment_amount');
+                            }),
+                        DatePicker::make('start_date')
+                            ->label('Date borrowed'),
+                        DatePicker::make('due_date')
+                            ->label('Expected repayment date'),
                     ]),
             ]);
     }
@@ -608,32 +665,73 @@ class OnboardingWizard extends Page implements HasForms
             $profile->user_id = $user->id;
             $profile->save();
 
-            if (filled($state['income']['amount'] ?? null)) {
+            $incomeSources = $state['income_sources'] ?? [];
+            if (empty($incomeSources) && filled($state['income']['amount'] ?? null)) {
+                $incomeSources = [[
+                    'name' => $state['income']['name'] ?? 'Main income',
+                    'type' => $state['income']['type'] ?? 'salary',
+                    'amount' => $state['income']['amount'],
+                    'frequency' => $state['income']['frequency'] ?? 'monthly',
+                ]];
+            }
+
+            foreach ($incomeSources as $incomeSource) {
+                if (blank($incomeSource['name'] ?? null) || ! filled($incomeSource['amount'] ?? null)) {
+                    continue;
+                }
+
+                $type = (string) ($incomeSource['type'] ?? 'other');
+                if (! in_array($type, ['salary', 'business', 'freelancing', 'farming', 'rental', 'investment', 'side_hustle', 'pension', 'other'], true)) {
+                    $type = 'other';
+                }
+
                 $user->incomeSources()->create([
-                    'name'       => $state['income']['name'] ?: 'Main income',
-                    'type'       => $state['income']['type'] ?? 'salary',
-                    'amount'     => $state['income']['amount'],
-                    'frequency'  => $state['income']['frequency'] ?? 'monthly',
+                    'name'       => $incomeSource['name'],
+                    'type'       => $type,
+                    'amount'     => $incomeSource['amount'],
+                    'frequency'  => $incomeSource['frequency'] ?? 'monthly',
                     'start_date' => now(),
                     'is_active'  => true,
                 ]);
             }
 
-            if (filled($state['expense']['amount'] ?? null)) {
-                $categoryId = $state['expense']['expense_category_id']
+            $recurringExpenses = $state['recurring_expenses'] ?? [];
+            if (empty($recurringExpenses) && filled($state['expense']['amount'] ?? null)) {
+                $recurringExpenses = [[
+                    'expense_category_id' => $state['expense']['expense_category_id'] ?? null,
+                    'name' => $state['expense']['name'] ?? 'Recurring expense',
+                    'amount' => $state['expense']['amount'],
+                    'frequency' => $state['expense']['frequency'] ?? 'monthly',
+                    'is_mandatory' => true,
+                ]];
+            }
+
+            foreach ($recurringExpenses as $expense) {
+                if (blank($expense['name'] ?? null) || ! filled($expense['amount'] ?? null)) {
+                    continue;
+                }
+
+                $categoryId = $expense['expense_category_id']
                     ?? ExpenseCategory::query()
                         ->firstOrCreate(['slug' => 'other'], ['name' => 'Other', 'is_system' => true])
                         ->getKey();
 
                 $user->expenses()->create([
                     'expense_category_id' => $categoryId,
-                    'name'                => $state['expense']['name'] ?: 'Recurring expense',
-                    'amount'              => $state['expense']['amount'],
+                    'name'                => $expense['name'],
+                    'amount'              => $expense['amount'],
                     'expense_date'        => now(),
-                    'frequency'           => $state['expense']['frequency'] ?? 'monthly',
+                    'frequency'           => $expense['frequency'] ?? 'monthly',
                     'is_recurring'        => true,
+                    'is_mandatory'        => (bool) ($expense['is_mandatory'] ?? true),
                 ]);
             }
+
+            $monthlyExpectedIncome = collect($incomeSources)
+                ->sum(fn (array $incomeSource): float => $this->toMonthlyAmount(
+                    (float) ($incomeSource['amount'] ?? 0),
+                    (string) ($incomeSource['frequency'] ?? 'monthly')
+                ));
 
             if (filled($state['budget']['total_budgeted'] ?? null) || filled($state['budget']['name'] ?? null)) {
                 $period = $state['budget']['period'] ?? 'monthly';
@@ -644,7 +742,7 @@ class OnboardingWizard extends Page implements HasForms
                     'period'         => $period,
                     'start_date'     => $start,
                     'end_date'       => $end,
-                    'total_income'   => $state['income']['amount'] ?? 0,
+                    'total_income'   => $monthlyExpectedIncome,
                     'total_budgeted' => $state['budget']['total_budgeted'] ?? 0,
                     'status'         => 'active',
                 ]);
@@ -675,6 +773,11 @@ class OnboardingWizard extends Page implements HasForms
                     'original_amount'     => $balance,
                     'outstanding_balance' => $balance,
                     'monthly_installment' => $debt['monthly_installment'] ?? 0,
+                    'repayment_frequency' => $debt['repayment_frequency'] ?? null,
+                    'interest_rate'       => $debt['interest_rate'] ?? 0,
+                    'total_repayment_amount' => $debt['total_repayment_amount'] ?? null,
+                    'start_date'          => $debt['start_date'] ?? null,
+                    'due_date'            => $debt['due_date'] ?? null,
                     'status'              => 'active',
                 ]);
             }
@@ -771,5 +874,49 @@ class OnboardingWizard extends Page implements HasForms
             'annual'    => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
             default     => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
         };
+    }
+
+    private function syncDebtRepeaterLoanAmounts(\Filament\Forms\Set $set, Get $get, string $changedField): void
+    {
+        $principal = $this->toFloat($get('outstanding_balance'));
+        if ($principal <= 0) {
+            return;
+        }
+
+        $interest = $this->toFloat($get('interest_rate'));
+        $total = $this->toFloat($get('total_repayment_amount'));
+
+        if ($changedField === 'total_repayment_amount' && $total > 0) {
+            $derivedInterest = (($total - $principal) / $principal) * 100;
+            $set('interest_rate', round(max(0, $derivedInterest), 2));
+
+            return;
+        }
+
+        if ($interest >= 0) {
+            $set('total_repayment_amount', round($principal * (1 + ($interest / 100)), 2));
+        }
+    }
+
+    private function toMonthlyAmount(float $amount, string $frequency): float
+    {
+        return match ($frequency) {
+            'daily' => $amount * 30,
+            'weekly' => $amount * 4.33,
+            'bi_weekly' => $amount * 2.17,
+            'monthly' => $amount,
+            'quarterly' => $amount / 3,
+            'annually' => $amount / 12,
+            default => $amount,
+        };
+    }
+
+    private function toFloat(mixed $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        return (float) str_replace(',', '', (string) $value);
     }
 }

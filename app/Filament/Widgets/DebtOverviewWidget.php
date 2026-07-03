@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Debt;
+use App\Services\FinancialIntelligenceService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,15 +14,31 @@ class DebtOverviewWidget extends Widget
 
     public function getViewData(): array
     {
-        $debts = Auth::user()->debts()
-            ->where('status', 'active')
-            ->orderBy('outstanding_balance')
-            ->get();
+        $user = Auth::user();
+        $analysis = app(FinancialIntelligenceService::class)->analyze($user);
+
+        $latestIncome = $user->incomeReceipts()
+            ->latest('received_date')
+            ->latest('id')
+            ->first();
+
+        $allocation = [];
+        if ($latestIncome && (float) $latestIncome->amount > 0) {
+            $allocation = app(FinancialIntelligenceService::class)
+                ->recommendAllocation($user, (float) $latestIncome->amount);
+        }
+
+        $debts = collect($analysis['ranked_debts']);
 
         return [
             'debts'      => $debts,
-            'totalDebt'  => $debts->sum('outstanding_balance'),
-            'totalMonthly' => $debts->sum('monthly_installment'),
+            'totalDebt'  => (float) $debts->sum('outstanding_balance'),
+            'totalMonthly' => (float) $debts->sum('monthly_obligation'),
+            'availableCash' => (float) $analysis['available_cash'],
+            'monthlyExpectedIncome' => (float) $analysis['monthly_expected_income'],
+            'mandatoryMonthlyExpenses' => (float) $analysis['monthly_mandatory_expenses'],
+            'latestIncomeAmount' => $latestIncome ? (float) $latestIncome->amount : null,
+            'allocation' => $allocation,
         ];
     }
 }
