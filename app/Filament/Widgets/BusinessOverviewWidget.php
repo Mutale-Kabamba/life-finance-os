@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Supplier;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class BusinessOverviewWidget extends Widget
 {
@@ -18,8 +19,139 @@ class BusinessOverviewWidget extends Widget
     protected static ?int $sort = 1;
     protected int | string | array $columnSpan = 'full';
 
+    public string $activePeriod = 'monthly';
+    public ?string $rangeStart = null;
+    public ?string $rangeEnd = null;
+    public bool $useCustomRange = false;
+
+    public function mount(): void
+    {
+        $this->activePeriod = (string) session('dashboard_filters.business.period', 'monthly');
+        $this->rangeStart = (string) session('dashboard_filters.business.range_start', now()->startOfMonth()->toDateString());
+        $this->rangeEnd = (string) session('dashboard_filters.business.range_end', now()->endOfMonth()->toDateString());
+        $this->useCustomRange = (bool) session('dashboard_filters.business.use_custom_range', false);
+    }
+
+    public function setPeriod(string $period): void
+    {
+        $allowedPeriods = ['daily', 'weekly', 'monthly', 'yearly'];
+
+        if (! in_array($period, $allowedPeriods, true)) {
+            return;
+        }
+
+        $this->activePeriod = $period;
+        $this->useCustomRange = false;
+
+        session([
+            'dashboard_filters.business.period' => $this->activePeriod,
+            'dashboard_filters.business.range_start' => $this->rangeStart,
+            'dashboard_filters.business.range_end' => $this->rangeEnd,
+            'dashboard_filters.business.use_custom_range' => $this->useCustomRange,
+        ]);
+
+        $this->dispatch('business-period-changed',
+            period: $this->activePeriod,
+            useCustomRange: $this->useCustomRange,
+            rangeStart: $this->rangeStart,
+            rangeEnd: $this->rangeEnd,
+        );
+    }
+
+    public function applyDateRange(): void
+    {
+        if (! $this->rangeStart || ! $this->rangeEnd) {
+            return;
+        }
+
+        try {
+            $start = Carbon::parse($this->rangeStart)->startOfDay();
+            $end = Carbon::parse($this->rangeEnd)->endOfDay();
+        } catch (\Throwable) {
+            return;
+        }
+
+        if ($start->gt($end)) {
+            [$this->rangeStart, $this->rangeEnd] = [$end->toDateString(), $start->toDateString()];
+        }
+
+        $this->useCustomRange = true;
+
+        session([
+            'dashboard_filters.business.period' => $this->activePeriod,
+            'dashboard_filters.business.range_start' => $this->rangeStart,
+            'dashboard_filters.business.range_end' => $this->rangeEnd,
+            'dashboard_filters.business.use_custom_range' => $this->useCustomRange,
+        ]);
+
+        $this->dispatch('business-period-changed',
+            period: $this->activePeriod,
+            useCustomRange: $this->useCustomRange,
+            rangeStart: $this->rangeStart,
+            rangeEnd: $this->rangeEnd,
+        );
+    }
+
+    public function clearDateRange(): void
+    {
+        $this->useCustomRange = false;
+
+        session([
+            'dashboard_filters.business.period' => $this->activePeriod,
+            'dashboard_filters.business.range_start' => $this->rangeStart,
+            'dashboard_filters.business.range_end' => $this->rangeEnd,
+            'dashboard_filters.business.use_custom_range' => $this->useCustomRange,
+        ]);
+
+        $this->dispatch('business-period-changed',
+            period: $this->activePeriod,
+            useCustomRange: $this->useCustomRange,
+            rangeStart: $this->rangeStart,
+            rangeEnd: $this->rangeEnd,
+        );
+    }
+
     public function getViewData(): array
     {
+        $period = $this->activePeriod;
+        $allowedPeriods = ['daily', 'weekly', 'monthly', 'yearly'];
+
+        if (! in_array($period, $allowedPeriods, true)) {
+            $period = 'monthly';
+            $this->activePeriod = 'monthly';
+        }
+
+        [$periodLabel, $periodStart, $periodEnd] = match ($period) {
+            'daily' => ['Daily', now()->startOfDay(), now()->endOfDay()],
+            'weekly' => ['Weekly', now()->startOfWeek(), now()->endOfWeek()],
+            'yearly' => ['Yearly', now()->startOfYear(), now()->endOfYear()],
+            default => ['Monthly', now()->startOfMonth(), now()->endOfMonth()],
+        };
+
+        $start = $periodStart;
+        $end = $periodEnd;
+
+        if ($this->useCustomRange && $this->rangeStart && $this->rangeEnd) {
+            try {
+                $start = Carbon::parse($this->rangeStart)->startOfDay();
+                $end = Carbon::parse($this->rangeEnd)->endOfDay();
+            } catch (\Throwable) {
+                $start = $periodStart;
+                $end = $periodEnd;
+                $this->useCustomRange = false;
+            }
+
+            if ($start->gt($end)) {
+                [$start, $end] = [$end, $start];
+                $this->rangeStart = $start->toDateString();
+                $this->rangeEnd = $end->toDateString();
+            }
+        }
+
+        $description = $this->useCustomRange
+            ? 'Showing transactions from ' . $start->format('M j, Y') . ' to ' . $end->format('M j, Y') . '.'
+            : $this->getPeriodDescription($period);
+
         $businessId = (int) Business::query()
             ->where('user_id', auth()->id())
             ->value('id');
@@ -27,12 +159,21 @@ class BusinessOverviewWidget extends Widget
         if (! $businessId) {
             return [
                 'hasBusiness' => false,
+                'description' => $description,
+                'activePeriod' => $period,
+                'periodLabel' => $periodLabel,
+                'periodFilters' => [
+                    ['value' => 'daily', 'label' => 'Daily'],
+                    ['value' => 'weekly', 'label' => 'Weekly'],
+                    ['value' => 'monthly', 'label' => 'Monthly'],
+                    ['value' => 'yearly', 'label' => 'Yearly'],
+                ],
+                'rangeStart' => $this->rangeStart,
+                'rangeEnd' => $this->rangeEnd,
+                'useCustomRange' => $this->useCustomRange,
                 'cards' => [],
             ];
         }
-
-        $start = now()->startOfMonth()->toDateString();
-        $end = now()->endOfMonth()->toDateString();
 
         $customerCount = Customer::query()->where('business_id', $businessId)->count();
         $supplierCount = Supplier::query()->where('business_id', $businessId)->count();
@@ -55,7 +196,7 @@ class BusinessOverviewWidget extends Widget
         $salesInPeriod = (float) Invoice::query()
             ->where('business_id', $businessId)
             ->whereIn('type', ['invoice', 'receipt'])
-            ->whereBetween('issue_date', [$start, $end])
+            ->whereBetween('issue_date', [$start->toDateString(), $end->toDateString()])
             ->where('status', '!=', 'cancelled')
             ->sum('total_amount');
 
@@ -74,6 +215,18 @@ class BusinessOverviewWidget extends Widget
 
         return [
             'hasBusiness' => true,
+            'description' => $description,
+            'activePeriod' => $period,
+            'periodLabel' => $periodLabel,
+            'periodFilters' => [
+                ['value' => 'daily', 'label' => 'Daily'],
+                ['value' => 'weekly', 'label' => 'Weekly'],
+                ['value' => 'monthly', 'label' => 'Monthly'],
+                ['value' => 'yearly', 'label' => 'Yearly'],
+            ],
+            'rangeStart' => $this->rangeStart,
+            'rangeEnd' => $this->rangeEnd,
+            'useCustomRange' => $this->useCustomRange,
             'cards' => [
                 [
                     'title' => 'Customers',
@@ -111,9 +264,9 @@ class BusinessOverviewWidget extends Widget
                     'theme' => 'amber',
                 ],
                 [
-                    'title' => 'Sales (This Month)',
+                    'title' => 'Sales (' . ($this->useCustomRange ? 'Selected Range' : $periodLabel) . ')',
                     'value' => 'ZMW ' . number_format($salesInPeriod, 2),
-                    'note' => 'Invoices and receipts in current month',
+                    'note' => 'Invoices and receipts for selected period',
                     'icon' => 'heroicon-m-arrow-trending-up',
                     'theme' => 'mint',
                 ],
@@ -133,5 +286,22 @@ class BusinessOverviewWidget extends Widget
                 ],
             ],
         ];
+    }
+
+    protected function getPeriodDescription(string $period): string
+    {
+        $today = now();
+
+        return match ($period) {
+            'daily' => 'Showing Today\'s Transactions | ' . $today->format('D, M j, Y'),
+            'weekly' => 'Showing This Week\'s Transactions | Week ' . $this->getWeekOfMonth($today) . ', ' . $today->format('M Y'),
+            'yearly' => 'Showing This Year\'s Transactions | ' . $today->format('Y'),
+            default => 'Showing This Month\'s Transactions | ' . $today->format('M, Y'),
+        };
+    }
+
+    protected function getWeekOfMonth(Carbon $date): int
+    {
+        return (int) ceil(($date->day + $date->copy()->startOfMonth()->dayOfWeekIso - 1) / 7);
     }
 }

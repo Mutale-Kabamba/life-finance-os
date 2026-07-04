@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile as AuthEditProfile;
 use App\Filament\Pages\Auth\Login as AuthLogin;
 use App\Filament\Pages\Auth\Register as AuthRegister;
 use App\Http\Middleware\EnsureOnboardingComplete;
@@ -34,10 +35,21 @@ class AdminPanelProvider extends PanelProvider
             ->registration(AuthRegister::class)
             ->passwordReset()
             ->emailVerification()
-            ->profile()
+            ->profile(AuthEditProfile::class, isSimple: false)
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarWidth('16.25rem')
+            ->collapsedSidebarWidth('4.5rem')
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
+            )
+            ->renderHook(
+                PanelsRenderHook::STYLES_AFTER,
+                fn (): string => view('filament.sidebar-theme')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn (): string => view('filament.sidebar-footer')->render(),
             )
             ->colors([
                 'primary' => Color::Emerald,
@@ -57,7 +69,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             ->pages([
                 AppDashboard::class,
             ])

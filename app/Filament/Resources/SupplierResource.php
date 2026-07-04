@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessSetup;
 use App\Filament\Resources\SupplierResource\Pages;
 use App\Models\Business;
 use App\Models\Supplier;
@@ -18,9 +17,9 @@ use Illuminate\Database\Eloquent\Builder;
 class SupplierResource extends Resource
 {
     protected static ?string $model = Supplier::class;
-    protected static ?string $cluster = BusinessSetup::class;
     protected static ?string $navigationIcon = 'heroicon-o-truck';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Setup';
     protected static ?string $navigationLabel = 'Suppliers';
     protected static ?int $navigationSort = 3;
 

@@ -3,7 +3,7 @@
 
     <x-filament::section>
         <x-slot name="heading">Recent Documents</x-slot>
-        <x-slot name="description">Latest invoices, quotations, and receipts</x-slot>
+        <x-slot name="description">{{ $description }}</x-slot>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm">

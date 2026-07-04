@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\BusinessLowStockWidget;
-use App\Filament\Widgets\BusinessOverviewWidget;
-use App\Filament\Widgets\BusinessRecentDocumentsWidget;
+use App\Filament\Widgets\WealthAssetsTableWidget;
+use App\Filament\Widgets\WealthInvestmentsTableWidget;
+use App\Filament\Widgets\WealthOverviewWidget;
+use App\Models\Asset;
+use App\Models\Investment;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\HtmlString;
 
-class BusinessDashboard extends BaseDashboard
+class WealthDashboard extends BaseDashboard
 {
-    protected static string $routePath = '/business-dashboard';
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
-    protected static ?string $navigationGroup = 'Business Finance';
-    protected static ?string $navigationLabel = 'Business Dashboard';
+    protected static string $routePath = '/wealth-dashboard';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
+    protected static ?string $navigationGroup = 'Wealth Building';
+    protected static ?string $navigationLabel = 'Wealth Dashboard';
     protected static ?int $navigationSort = 0;
 
     public function getHeading(): HtmlString
@@ -44,14 +46,24 @@ class BusinessDashboard extends BaseDashboard
     public function getWidgets(): array
     {
         return [
-            BusinessOverviewWidget::class,
-            BusinessRecentDocumentsWidget::class,
-            BusinessLowStockWidget::class,
+            WealthOverviewWidget::class,
+            WealthAssetsTableWidget::class,
+            WealthInvestmentsTableWidget::class,
         ];
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return (bool) auth()->user()?->profile?->hasFeature('has_business');
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return (bool) (
+            $user->profile?->hasFeature('has_investments') ||
+            Asset::query()->where('user_id', $user->id)->exists() ||
+            Investment::query()->where('user_id', $user->id)->exists()
+        );
     }
 }

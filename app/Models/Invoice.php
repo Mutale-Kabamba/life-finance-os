@@ -14,7 +14,7 @@ class Invoice extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'business_id', 'customer_id', 'invoice_number', 'type',
+        'business_id', 'customer_id', 'converted_from_id', 'invoice_number', 'type',
         'issue_date', 'due_date', 'subtotal', 'tax_amount', 'discount_amount',
         'total_amount', 'amount_paid', 'status', 'notes',
     ];
@@ -42,6 +42,16 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function sourceDocument(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'converted_from_id');
+    }
+
+    public function conversions(): HasMany
+    {
+        return $this->hasMany(self::class, 'converted_from_id');
     }
 
     public function getBalanceDueAttribute(): float
