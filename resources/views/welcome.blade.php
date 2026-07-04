@@ -16,8 +16,10 @@
             --ink: #101613;
             --muted: #626b66;
             --line: #eaefec;
-            --brand: #0f9d6c;
-            --brand-dark: #0b7d55;
+            --brand: #009933;
+            --brand-dark: #007a29;
+            --accent: #004AAD;
+            --accent-dark: #003b8a;
             --mint-1: #e9f7f0;
             --mint-2: #d7f0e4;
             --radius: 20px;
@@ -30,8 +32,10 @@
             --ink: #e8f3ee;
             --muted: #96a69d;
             --line: #22312b;
-            --brand: #29c186;
-            --brand-dark: #1f9f6e;
+            --brand: #00b33c;
+            --brand-dark: #009933;
+            --accent: #4d87ff;
+            --accent-dark: #2f66d1;
             --mint-1: #10231c;
             --mint-2: #173128;
             --shadow-sm: 0 6px 20px -14px rgba(0, 0, 0, 0.55);
@@ -67,11 +71,26 @@
             background: rgba(11, 18, 16, 0.84);
         }
         .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
-        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
-        .brand-mark {
-            width: 34px; height: 34px; border-radius: 10px;
-            display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .9rem;
-            background: linear-gradient(135deg, var(--brand), #34d399);
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
+        }
+        .brand-logo {
+            display: block;
+            height: 30px;
+            width: auto;
+            max-width: 190px;
+            object-fit: contain;
+        }
+        .brand-logo-dark {
+            display: none;
+        }
+        [data-theme="dark"] .brand-logo-light {
+            display: none;
+        }
+        [data-theme="dark"] .brand-logo-dark {
+            display: block;
         }
         .nav-links { display: flex; align-items: center; gap: 4px; font-size: .92rem; color: var(--muted); }
         .nav-links a { padding: 8px 14px; border-radius: 10px; transition: .18s ease; }
@@ -134,8 +153,8 @@
         }
         .btn-ghost { color: var(--ink); }
         .btn-ghost:hover { background: var(--mint-1); }
-        .btn-dark { background: var(--ink); color: #fff; }
-        .btn-dark:hover { transform: translateY(-1px); background: #0b100d; }
+        .btn-dark { background: var(--accent); color: #fff; }
+        .btn-dark:hover { transform: translateY(-1px); background: var(--accent-dark); }
         .btn-primary { background: var(--brand); color: #fff; box-shadow: var(--shadow-sm); }
         .btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); }
         .btn-outline { border-color: var(--line); color: var(--ink); background: #fff; }
@@ -202,7 +221,7 @@
             color: #f2f7f5;
         }
         h1 .grad {
-            background: linear-gradient(110deg, #31d093, #18b579 62%, #74e8be);
+            background: linear-gradient(110deg, var(--accent), var(--brand) 62%, #47d36f);
             -webkit-background-clip: text; background-clip: text; color: transparent;
             white-space: normal;
         }
@@ -260,7 +279,7 @@
         .chart { background: #fafcfb; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
         .chart h4, .list h4 { font-size: .8rem; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
         .bars { display: flex; align-items: end; gap: 10px; height: 120px; }
-        .bar { flex: 1; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg, #34d399, var(--brand)); animation: rise .8s ease-out both; }
+        .bar { flex: 1; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg, var(--accent), var(--brand)); animation: rise .8s ease-out both; }
         .bar:nth-child(1){ height: 40%; animation-delay:.05s } .bar:nth-child(2){ height: 66%; animation-delay:.12s }
         .bar:nth-child(3){ height: 52%; animation-delay:.19s } .bar:nth-child(4){ height: 82%; animation-delay:.26s }
         .bar:nth-child(5){ height: 60%; animation-delay:.33s } .bar:nth-child(6){ height: 94%; animation-delay:.4s }
@@ -268,7 +287,7 @@
         .list ul { list-style: none; display: grid; gap: 12px; }
         .list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .82rem; }
         .track { width: 52%; height: 7px; background: #e8f2ec; border-radius: 999px; overflow: hidden; }
-        .track i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), #34d399); }
+        .track i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--accent)); }
 
         /* Logos */
         .logos { padding: 44px 0 8px; }
@@ -615,15 +634,9 @@
             .container { padding-inline: 16px; }
             .logo-row { gap: 24px; }
 
-            .brand {
-                gap: 8px;
-                font-size: .92rem;
-            }
-
-            .brand-mark {
-                width: 30px;
-                height: 30px;
-                font-size: .78rem;
+            .brand-logo {
+                height: 24px;
+                max-width: 150px;
             }
 
             .nav-actions {
@@ -703,12 +716,12 @@
 
         [data-theme="dark"] .btn-outline { background: #10231c; }
         [data-theme="dark"] .btn-dark {
-            background: #e8f3ee;
-            color: #0b1210;
+            background: var(--accent);
+            color: #ffffff;
             border-color: transparent;
         }
         [data-theme="dark"] .btn-dark:hover {
-            background: #d6e8df;
+            background: var(--accent-dark);
         }
         [data-theme="dark"] .btn-light {
             background: #f2faf6;
@@ -741,8 +754,8 @@
     <header class="nav">
         <div class="container nav-inner">
             <a href="/" class="brand">
-                <span class="brand-mark">LF</span>
-                {{ config('app.name', 'Life Finance OS') }}
+                <img src="{{ asset('img/logos/lf_BG.png') }}" alt="{{ config('app.name', 'Life Finance OS') }} logo" class="brand-logo brand-logo-light" />
+                <img src="{{ asset('img/logos/lf_W.png') }}" alt="{{ config('app.name', 'Life Finance OS') }} logo" class="brand-logo brand-logo-dark" />
             </a>
 
             <nav class="nav-links">

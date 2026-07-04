@@ -52,12 +52,21 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => view('filament.sidebar-footer')->render(),
             )
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => Color::hex('#004AAD'),
                 'danger'  => Color::Rose,
                 'info'    => Color::Sky,
-                'success' => Color::Teal,
+                'success' => Color::hex('#009933'),
                 'warning' => Color::Amber,
             ])
+            ->brandLogo(fn () => view('filament.brand-logo', [
+                'expanded' => asset('img/logos/lf_BG.png'),
+                'collapsed' => asset('img/logos/icon_BG.png'),
+            ]))
+            ->darkModeBrandLogo(fn () => view('filament.brand-logo', [
+                'expanded' => asset('img/logos/lf_W.png'),
+                'collapsed' => asset('img/logos/icon_W.png'),
+            ]))
+            ->brandLogoHeight('2.125rem')
             ->brandName('Life Finance OS')
             ->navigationGroups([
                 NavigationGroup::make('Personal Finance'),

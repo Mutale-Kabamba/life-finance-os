@@ -22,6 +22,35 @@
         border-bottom-color: rgb(var(--gray-800));
     }
 
+    /* --- Brand logo swap: expanded uses full logo, collapsed uses icon --- */
+    .lfos-brand-logo-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .lfos-brand-logo {
+        display: block;
+        width: auto;
+        height: 2rem;
+        max-width: 100%;
+        object-fit: contain;
+    }
+    .lfos-brand-logo-collapsed {
+        display: none;
+        height: 1.5rem;
+    }
+
+    .fi-sidebar:not(.fi-sidebar-open) .lfos-brand-logo-wrap {
+        justify-content: center;
+    }
+    .fi-sidebar:not(.fi-sidebar-open) .lfos-brand-logo-expanded {
+        display: none;
+    }
+    .fi-sidebar:not(.fi-sidebar-open) .lfos-brand-logo-collapsed {
+        display: block;
+    }
+
     /* --- Group (section) labels: 11px, 600, uppercase, tracked (spec §1/§6) --- */
     .fi-sidebar-group-label {
         font-size: 11px !important;
