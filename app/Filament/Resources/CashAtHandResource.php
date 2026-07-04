@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessOperations;
 use App\Filament\Resources\CashAtHandResource\Pages;
 use App\Models\Business;
 use App\Models\CashAtHand;
@@ -16,9 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
 class CashAtHandResource extends Resource
 {
     protected static ?string $model = CashAtHand::class;
-    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Cash at Hand';
     protected static ?string $slug = 'cash-at-hand';
     protected static ?int $navigationSort = 22;

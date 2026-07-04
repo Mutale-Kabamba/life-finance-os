@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessDocuments;
 use App\Filament\Resources\InvoiceResource\Pages;
+use App\Filament\Resources\ReceiptResource;
 use App\Models\Invoice;
+use App\Support\BusinessDocumentConverter;
+use App\Support\BusinessDocumentForm;
 use App\Support\InvoicePdfBuilder;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,9 +20,9 @@ use Illuminate\Support\Str;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-    protected static ?string $cluster = BusinessDocuments::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Documents';
     protected static ?int $navigationSort = 40;
 
     public static function getNavigationLabel(): string
@@ -43,11 +46,12 @@ class InvoiceResource extends Resource
             Forms\Components\Section::make('Invoice Header')->schema([
                 Forms\Components\Select::make('business_id')
                     ->label('Business')
-                    ->relationship('business', 'name')
+                    ->relationship('business', 'name', fn (Builder $query) => $query->where('user_id', auth()->id()))
+                    ->default(fn () => \App\Models\Business::query()->where('user_id', auth()->id())->value('id'))
                     ->required()->searchable()->preload(),
                 Forms\Components\Select::make('customer_id')
                     ->label('Customer')
-                    ->relationship('customer', 'name')
+                    ->relationship('customer', 'name', fn (Builder $query) => $query->whereHas('business', fn (Builder $b) => $b->where('user_id', auth()->id())))
                     ->required()->searchable()->preload(),
                 Forms\Components\TextInput::make('invoice_number')
                     ->required()->default(fn () => 'INV-' . strtoupper(Str::random(6))),
@@ -59,25 +63,9 @@ class InvoiceResource extends Resource
                     ->default('draft'),
             ])->columns(2),
 
-            Forms\Components\Section::make('Line Items')->schema([
-                Forms\Components\Repeater::make('items')
-                    ->relationship()
-                    ->schema([
-                        Forms\Components\TextInput::make('description')->required()->columnSpan(3),
-                        Forms\Components\TextInput::make('quantity')->numeric()->required()->default(1),
-                        Forms\Components\TextInput::make('unit_price')->numeric()->required()->prefix('ZMW'),
-                        Forms\Components\TextInput::make('total_price')->numeric()->prefix('ZMW')->disabled(),
-                    ])->columns(6),
-            ]),
+            BusinessDocumentForm::lineItemsSection(),
 
-            Forms\Components\Section::make('Totals')->schema([
-                Forms\Components\TextInput::make('subtotal')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('tax_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('discount_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('total_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('amount_paid')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\Textarea::make('notes')->columnSpanFull(),
-            ])->columns(2),
+            BusinessDocumentForm::totalsSection(),
         ]);
     }
 
@@ -91,20 +79,82 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('due_date')->date()->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')->money('ZMW')->sortable(),
                 Tables\Columns\TextColumn::make('amount_paid')->money('ZMW'),
-                Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'gray'    => 'draft',
-                        'info'    => 'sent',
-                        'warning' => 'partial',
-                        'success' => 'paid',
-                        'danger'  => 'overdue',
-                    ]),
+                Tables\Columns\SelectColumn::make('status')
+                    ->options([
+                        'draft' => 'Draft',
+                        'sent' => 'Sent',
+                        'partial' => 'Partial',
+                        'paid' => 'Paid',
+                        'overdue' => 'Overdue',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->rules(['required']),
+                Tables\Columns\TextColumn::make('sourceDocument.invoice_number')
+                    ->label('From Quotation')
+                    ->placeholder('—')
+                    ->toggleable(),
             ])
             ->defaultSort('issue_date', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status'),
             ])
             ->actions([
+                Tables\Actions\Action::make('convertToReceipt')
+                    ->label('Convert to Receipt')
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->color('success')
+                    ->modalHeading('Convert invoice to receipt')
+                    ->modalDescription('Adjust any fields below before creating the receipt.')
+                    ->modalSubmitActionLabel('Convert')
+                    ->form([
+                        Forms\Components\DatePicker::make('issue_date')
+                            ->required()
+                            ->default(now()),
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                'draft' => 'Draft',
+                                'paid' => 'Paid',
+                                'cancelled' => 'Cancelled',
+                            ])
+                            ->default('paid')
+                            ->required(),
+                        Forms\Components\TextInput::make('tax_amount')
+                            ->numeric()
+                            ->default(fn (Invoice $record) => (float) $record->tax_amount)
+                            ->minValue(0)
+                            ->prefix('ZMW'),
+                        Forms\Components\TextInput::make('discount_amount')
+                            ->numeric()
+                            ->default(fn (Invoice $record) => (float) $record->discount_amount)
+                            ->minValue(0)
+                            ->prefix('ZMW'),
+                        Forms\Components\TextInput::make('amount_paid')
+                            ->numeric()
+                            ->default(fn (Invoice $record) => (float) $record->total_amount)
+                            ->minValue(0)
+                            ->prefix('ZMW'),
+                        Forms\Components\Textarea::make('notes')
+                            ->default(fn (Invoice $record) => $record->notes)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Invoice $record, array $data) {
+                        $receipt = BusinessDocumentConverter::convert($record, 'receipt', [
+                            'issue_date' => $data['issue_date'] ?? now(),
+                            'status' => $data['status'] ?? 'paid',
+                            'tax_amount' => $data['tax_amount'] ?? 0,
+                            'discount_amount' => $data['discount_amount'] ?? 0,
+                            'amount_paid' => $data['amount_paid'] ?? null,
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Receipt created from invoice')
+                            ->body("Receipt {$receipt->invoice_number} was created successfully.")
+                            ->success()
+                            ->send();
+
+                        return redirect(ReceiptResource::getUrl('index'));
+                    }),
                 Tables\Actions\Action::make('downloadPdf')
                     ->label('PDF')
                     ->icon('heroicon-o-arrow-down-tray')

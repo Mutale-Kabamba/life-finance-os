@@ -2,7 +2,7 @@
     <x-filament::section>
         <x-slot name="heading">Debt Intelligence</x-slot>
         <x-slot name="description">
-            Ranked by urgency and affordability · Available cash: ZMW {{ number_format($availableCash, 2) }} · Expected income: ZMW {{ number_format($monthlyExpectedIncome, 2) }}/month
+            Ranked by urgency and affordability · Available cash: ZMW {{ number_format($availableCash, 2) }} · Expected income: ZMW {{ number_format($monthlyExpectedIncome, 2) }}/{{ $periodSuffix }}
         </x-slot>
 
         @if($debts->isEmpty())
@@ -11,7 +11,7 @@
             </div>
         @else
             <div class="mb-3 text-sm text-gray-600 dark:text-gray-300">
-                Mandatory recurring commitments: ZMW {{ number_format($mandatoryMonthlyExpenses, 2) }}/month
+                Mandatory recurring commitments: ZMW {{ number_format($mandatoryMonthlyExpenses, 2) }}/{{ $periodSuffix }}
             </div>
 
             <div class="space-y-3">
@@ -43,7 +43,7 @@
                             </div>
                             <div class="text-right">
                                 <div class="font-bold text-danger-600">ZMW {{ number_format($debt['outstanding_balance'], 2) }}</div>
-                                <div class="text-xs text-gray-500">ZMW {{ number_format($debt['monthly_obligation'], 2) }}/mo</div>
+                                <div class="text-xs text-gray-500">ZMW {{ number_format($debt['monthly_obligation'], 2) }}/{{ $periodSuffix }}</div>
                             </div>
                         </div>
 

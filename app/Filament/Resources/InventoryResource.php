@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessOperations;
 use App\Filament\Resources\InventoryResource\Pages;
 use App\Models\Business;
 use App\Models\Inventory;
@@ -21,9 +20,9 @@ use Illuminate\Database\Eloquent\Builder;
 class InventoryResource extends Resource
 {
     protected static ?string $model = Inventory::class;
-    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Products';
     protected static ?string $modelLabel = 'product';
     protected static ?string $slug = 'products';

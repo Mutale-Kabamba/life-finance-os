@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessOperations;
 use App\Filament\Resources\StockMovementResource\Pages;
 use App\Models\Business;
 use App\Models\Inventory;
@@ -18,9 +17,9 @@ use Illuminate\Database\Eloquent\Builder;
 class StockMovementResource extends Resource
 {
     protected static ?string $model = StockMovement::class;
-    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-arrows-up-down';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Stock Movements';
     protected static ?int $navigationSort = 5;
 

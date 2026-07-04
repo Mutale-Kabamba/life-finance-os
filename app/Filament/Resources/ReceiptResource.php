@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessDocuments;
 use App\Filament\Resources\ReceiptResource\Pages;
 use App\Models\Invoice;
+use App\Support\BusinessDocumentForm;
 use App\Support\InvoicePdfBuilder;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,9 +17,9 @@ use Illuminate\Support\Str;
 class ReceiptResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-    protected static ?string $cluster = BusinessDocuments::class;
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Documents';
     protected static ?int $navigationSort = 42;
 
     public static function getNavigationLabel(): string
@@ -43,11 +43,12 @@ class ReceiptResource extends Resource
             Forms\Components\Section::make('Receipt Header')->schema([
                 Forms\Components\Select::make('business_id')
                     ->label('Business')
-                    ->relationship('business', 'name')
+                    ->relationship('business', 'name', fn (Builder $query) => $query->where('user_id', auth()->id()))
+                    ->default(fn () => \App\Models\Business::query()->where('user_id', auth()->id())->value('id'))
                     ->required()->searchable()->preload(),
                 Forms\Components\Select::make('customer_id')
                     ->label('Customer')
-                    ->relationship('customer', 'name')
+                    ->relationship('customer', 'name', fn (Builder $query) => $query->whereHas('business', fn (Builder $b) => $b->where('user_id', auth()->id())))
                     ->required()->searchable()->preload(),
                 Forms\Components\TextInput::make('invoice_number')
                     ->label('Receipt Number')
@@ -60,25 +61,9 @@ class ReceiptResource extends Resource
                     ->default('paid'),
             ])->columns(2),
 
-            Forms\Components\Section::make('Line Items')->schema([
-                Forms\Components\Repeater::make('items')
-                    ->relationship()
-                    ->schema([
-                        Forms\Components\TextInput::make('description')->required()->columnSpan(3),
-                        Forms\Components\TextInput::make('quantity')->numeric()->required()->default(1),
-                        Forms\Components\TextInput::make('unit_price')->numeric()->required()->prefix('ZMW'),
-                        Forms\Components\TextInput::make('total_price')->numeric()->prefix('ZMW')->disabled(),
-                    ])->columns(6),
-            ]),
+            BusinessDocumentForm::lineItemsSection(),
 
-            Forms\Components\Section::make('Totals')->schema([
-                Forms\Components\TextInput::make('subtotal')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('tax_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('discount_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('total_amount')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\TextInput::make('amount_paid')->numeric()->prefix('ZMW')->default(0),
-                Forms\Components\Textarea::make('notes')->columnSpanFull(),
-            ])->columns(2),
+            BusinessDocumentForm::totalsSection(),
         ]);
     }
 
@@ -91,12 +76,17 @@ class ReceiptResource extends Resource
                 Tables\Columns\TextColumn::make('issue_date')->date()->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')->money('ZMW')->sortable(),
                 Tables\Columns\TextColumn::make('amount_paid')->money('ZMW'),
-                Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'gray'    => 'draft',
-                        'success' => 'paid',
-                        'danger'  => 'cancelled',
-                    ]),
+                Tables\Columns\SelectColumn::make('status')
+                    ->options([
+                        'draft' => 'Draft',
+                        'paid' => 'Paid',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->rules(['required']),
+                Tables\Columns\TextColumn::make('sourceDocument.invoice_number')
+                    ->label('From Invoice')
+                    ->placeholder('—')
+                    ->toggleable(),
             ])
             ->defaultSort('issue_date', 'desc')
             ->filters([

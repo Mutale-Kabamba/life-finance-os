@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Clusters\BusinessSetup;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Business;
 use App\Models\Customer;
@@ -17,9 +16,9 @@ use Illuminate\Database\Eloquent\Builder;
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
-    protected static ?string $cluster = BusinessSetup::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Setup';
     protected static ?string $navigationLabel = 'Customers';
     protected static ?int $navigationSort = 2;
 

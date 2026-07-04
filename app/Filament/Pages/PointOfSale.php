@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
-use App\Filament\Clusters\BusinessOperations;
 use App\Models\Business;
 use App\Models\Customer;
 use App\Models\Inventory;
@@ -30,9 +29,9 @@ class PointOfSale extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $cluster = BusinessOperations::class;
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Point of Sale';
     protected static ?int $navigationSort = 6;
     protected static string $view = 'filament.pages.point-of-sale';
