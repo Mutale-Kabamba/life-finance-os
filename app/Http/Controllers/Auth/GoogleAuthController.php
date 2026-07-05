@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -40,6 +41,10 @@ class GoogleAuthController extends Controller
     public function redirect(string $provider): RedirectResponse
     {
         $driver = $this->resolveDriver($provider);
+
+        if ($response = $this->ensureProviderConfigured($provider)) {
+            return $response;
+        }
 
         if ($provider === 'facebook') {
             $facebookDriver = Socialite::driver($driver);
@@ -90,6 +95,10 @@ class GoogleAuthController extends Controller
     public function callback(string $provider): RedirectResponse
     {
         $driver = $this->resolveDriver($provider);
+
+        if ($response = $this->ensureProviderConfigured($provider)) {
+            return $response;
+        }
 
         if ($provider === 'google') {
             $googleDriver = Socialite::driver($driver);
@@ -179,6 +188,70 @@ class GoogleAuthController extends Controller
         }
 
         return $this->socialiteDriverMap[$provider];
+    }
+
+    private function ensureProviderConfigured(string $provider): ?RedirectResponse
+    {
+        $requirements = [
+            'google' => ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'],
+            'facebook' => ['FACEBOOK_CLIENT_ID', 'FACEBOOK_CLIENT_SECRET', 'FACEBOOK_REDIRECT_URI'],
+            'x' => ['X_CLIENT_ID', 'X_CLIENT_SECRET', 'X_REDIRECT_URI'],
+            'linkedin-openid' => ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_REDIRECT_URI'],
+            'github' => ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_REDIRECT_URI'],
+        ];
+
+        $serviceConfig = [
+            'google' => [
+                'client_id' => config('services.google.client_id'),
+                'client_secret' => config('services.google.client_secret'),
+                'redirect' => config('services.google.redirect'),
+            ],
+            'facebook' => [
+                'client_id' => config('services.facebook.client_id'),
+                'client_secret' => config('services.facebook.client_secret'),
+                'redirect' => config('services.facebook.redirect'),
+            ],
+            'x' => [
+                'client_id' => config('services.x.client_id'),
+                'client_secret' => config('services.x.client_secret'),
+                'redirect' => config('services.x.redirect'),
+            ],
+            'linkedin-openid' => [
+                'client_id' => config('services.linkedin-openid.client_id'),
+                'client_secret' => config('services.linkedin-openid.client_secret'),
+                'redirect' => config('services.linkedin-openid.redirect'),
+            ],
+            'github' => [
+                'client_id' => config('services.github.client_id'),
+                'client_secret' => config('services.github.client_secret'),
+                'redirect' => config('services.github.redirect'),
+            ],
+        ];
+
+        $values = $serviceConfig[$provider] ?? [];
+        $missing = [];
+
+        foreach ($values as $key => $value) {
+            if (blank($value)) {
+                $missing[] = $key;
+            }
+        }
+
+        if ($missing === []) {
+            return null;
+        }
+
+        Log::warning('OAuth provider is not configured', [
+            'provider' => $provider,
+            'missing_config_keys' => $missing,
+            'required_env_vars' => $requirements[$provider] ?? [],
+        ]);
+
+        return redirect()
+            ->route('login')
+            ->withErrors([
+                'oauth' => 'Login with '.strtoupper($provider).' is temporarily unavailable. Missing configuration: '.implode(', ', $requirements[$provider] ?? []).'.',
+            ]);
     }
 
     /**
