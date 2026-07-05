@@ -31,6 +31,7 @@ class PointOfSale extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Point of Sale';
     protected static ?int $navigationSort = 6;
     protected static string $view = 'filament.pages.point-of-sale';
@@ -136,10 +137,14 @@ class PointOfSale extends Page implements HasForms
         $state = $this->form->getState();
 
         try {
+            $customerId = filled($state['customer_id'] ?? null)
+                ? (int) $state['customer_id']
+                : null;
+
             $result = app(PointOfSaleService::class)->checkout([
                 'business_id'    => (int) $state['business_id'],
                 'user_id'        => (int) auth()->id(),
-                'customer_id'    => $state['customer_id'] ?? null,
+                'customer_id'    => $customerId,
                 'date'           => $state['date'] ?? now()->toDateString(),
                 'items'          => $state['items'] ?? [],
                 'create_invoice' => (bool) ($state['create_invoice'] ?? false),

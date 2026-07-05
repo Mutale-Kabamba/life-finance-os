@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ class Invoice extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'business_id', 'customer_id', 'invoice_number', 'type',
+        'business_id', 'customer_id', 'converted_from_id', 'invoice_number', 'type',
         'issue_date', 'due_date', 'subtotal', 'tax_amount', 'discount_amount',
         'total_amount', 'amount_paid', 'status', 'notes',
     ];
@@ -43,6 +44,16 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function sourceDocument(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'converted_from_id');
+    }
+
+    public function conversions(): HasMany
+    {
+        return $this->hasMany(self::class, 'converted_from_id');
+    }
+
     public function getBalanceDueAttribute(): float
     {
         return max(0, $this->total_amount - $this->amount_paid);
@@ -51,5 +62,30 @@ class Invoice extends Model
     public function getIsOverdueAttribute(): bool
     {
         return $this->due_date?->isPast() && $this->status !== 'paid';
+    }
+
+    protected function invoiceNumber(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $this->sanitizeUtf8($value),
+            set: fn (?string $value): ?string => $this->sanitizeUtf8($value),
+        );
+    }
+
+    protected function notes(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $this->sanitizeUtf8($value),
+            set: fn (?string $value): ?string => $this->sanitizeUtf8($value),
+        );
+    }
+
+    protected function sanitizeUtf8(?string $value): ?string
+    {
+        if ($value === null || mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

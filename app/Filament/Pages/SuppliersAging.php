@@ -20,6 +20,7 @@ class SuppliersAging extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Reports';
     protected static ?string $navigationLabel = 'Suppliers Aging';
     protected static ?int $navigationSort = 24;
     protected static string $view = 'filament.pages.suppliers-aging';

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerResource\Pages;
+use App\Models\Business;
 use App\Models\Customer;
 use App\Support\CsvActions;
 use Filament\Forms;
@@ -17,6 +18,8 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Setup';
+    protected static ?string $navigationLabel = 'Customers';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -59,13 +62,33 @@ class CustomerResource extends Resource
             ])
             ->headerActions([
                 CsvActions::export([
+                    'business_id'         => 'Business ID',
                     'name'                => 'Name',
                     'business.name'       => 'Business',
                     'email'               => 'Email',
                     'phone'               => 'Phone',
+                    'address'             => 'Address',
+                    'tax_number'          => 'Tax Number',
                     'outstanding_balance' => 'Outstanding',
                     'credit_limit'        => 'Credit Limit',
+                    'is_active'           => 'Active (1/0)',
+                    'notes'               => 'Notes',
                 ], 'customers'),
+                CsvActions::import(Customer::class, [
+                    'name'                => 'Name',
+                    'email'               => 'Email',
+                    'phone'               => 'Phone',
+                    'address'             => 'Address',
+                    'tax_number'          => 'Tax Number',
+                    'credit_limit'        => 'Credit Limit',
+                    'outstanding_balance' => 'Outstanding',
+                    'is_active'           => 'Active (1/0)',
+                    'notes'               => 'Notes',
+                ], fn () => [
+                    'business_id' => Business::query()->where('user_id', auth()->id())->value('id'),
+                    'is_active' => true,
+                    'outstanding_balance' => 0,
+                ], ['credit_limit', 'outstanding_balance']),
             ])
             ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);

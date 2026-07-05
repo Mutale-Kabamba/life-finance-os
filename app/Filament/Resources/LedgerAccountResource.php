@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LedgerAccountResource\Pages;
 use App\Models\Business;
 use App\Models\LedgerAccount;
+use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,6 +18,7 @@ class LedgerAccountResource extends Resource
     protected static ?string $model = LedgerAccount::class;
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Chart of Accounts';
     protected static ?int $navigationSort = 20;
 
@@ -85,6 +87,26 @@ class LedgerAccountResource extends Resource
                     'cogs' => 'COGS', 'expense' => 'Expense',
                 ]),
                 Tables\Filters\TernaryFilter::make('is_active'),
+            ])
+            ->headerActions([
+                CsvActions::export([
+                    'business_id' => 'Business ID',
+                    'code' => 'Code',
+                    'name' => 'Name',
+                    'group_name' => 'Group',
+                    'type' => 'Type',
+                    'is_active' => 'Active (1/0)',
+                ], 'chart-of-accounts'),
+                CsvActions::import(LedgerAccount::class, [
+                    'code' => 'Code',
+                    'name' => 'Name',
+                    'group_name' => 'Group',
+                    'type' => 'Type',
+                    'is_active' => 'Active (1/0)',
+                ], fn () => [
+                    'business_id' => Business::query()->where('user_id', auth()->id())->value('id'),
+                    'is_active' => true,
+                ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

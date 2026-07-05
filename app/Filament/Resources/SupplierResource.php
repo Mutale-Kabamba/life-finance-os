@@ -19,6 +19,8 @@ class SupplierResource extends Resource
     protected static ?string $model = Supplier::class;
     protected static ?string $navigationIcon = 'heroicon-o-truck';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Setup';
+    protected static ?string $navigationLabel = 'Suppliers';
     protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
@@ -61,12 +63,31 @@ class SupplierResource extends Resource
             ])
             ->headerActions([
                 CsvActions::export([
+                    'business_id'         => 'Business ID',
                     'name'                => 'Name',
                     'business.name'       => 'Business',
                     'email'               => 'Email',
                     'phone'               => 'Phone',
+                    'address'             => 'Address',
+                    'tax_number'          => 'Tax Number',
                     'outstanding_balance' => 'Outstanding',
+                    'is_active'           => 'Active (1/0)',
+                    'notes'               => 'Notes',
                 ], 'suppliers'),
+                CsvActions::import(Supplier::class, [
+                    'name'                => 'Name',
+                    'email'               => 'Email',
+                    'phone'               => 'Phone',
+                    'address'             => 'Address',
+                    'tax_number'          => 'Tax Number',
+                    'outstanding_balance' => 'Outstanding',
+                    'is_active'           => 'Active (1/0)',
+                    'notes'               => 'Notes',
+                ], fn () => [
+                    'business_id' => Business::query()->where('user_id', auth()->id())->value('id'),
+                    'is_active' => true,
+                    'outstanding_balance' => 0,
+                ], ['outstanding_balance']),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

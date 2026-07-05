@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             ExpenseCategorySeeder::class,
+            BusinessTestDataSeeder::class,
         ]);
 
         $admin = User::firstOrCreate(

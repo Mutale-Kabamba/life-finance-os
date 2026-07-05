@@ -42,9 +42,21 @@ class GoogleAuthController extends Controller
         $driver = $this->resolveDriver($provider);
 
         if ($provider === 'facebook') {
-            return Socialite::driver($driver)
-                ->setScopes(['public_profile'])
-                ->redirect();
+            $facebookDriver = Socialite::driver($driver);
+
+            $facebookScopes = config('services.facebook.scopes', ['email', 'public_profile']);
+
+            if (method_exists($facebookDriver, 'scopes')) {
+                $facebookDriver = $facebookDriver->scopes($facebookScopes);
+            } elseif (method_exists($facebookDriver, 'setScopes')) {
+                $facebookDriver = $facebookDriver->setScopes($facebookScopes);
+            }
+
+            if (method_exists($facebookDriver, 'fields')) {
+                $facebookDriver = $facebookDriver->fields(config('services.facebook.fields', ['name', 'email']));
+            }
+
+            return $facebookDriver->redirect();
         }
 
         if ($provider === 'google') {
@@ -89,6 +101,22 @@ class GoogleAuthController extends Controller
             }
 
             $socialUser = $googleDriver->stateless()->user();
+        } elseif ($provider === 'facebook') {
+            $facebookDriver = Socialite::driver($driver);
+
+            $facebookScopes = config('services.facebook.scopes', ['email', 'public_profile']);
+
+            if (method_exists($facebookDriver, 'scopes')) {
+                $facebookDriver = $facebookDriver->scopes($facebookScopes);
+            } elseif (method_exists($facebookDriver, 'setScopes')) {
+                $facebookDriver = $facebookDriver->setScopes($facebookScopes);
+            }
+
+            if (method_exists($facebookDriver, 'fields')) {
+                $facebookDriver = $facebookDriver->fields(config('services.facebook.fields', ['name', 'email']));
+            }
+
+            $socialUser = $facebookDriver->stateless()->user();
         } else {
             $socialUser = Socialite::driver($driver)->stateless()->user();
         }

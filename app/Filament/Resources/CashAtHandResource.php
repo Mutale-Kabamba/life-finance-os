@@ -17,6 +17,7 @@ class CashAtHandResource extends Resource
     protected static ?string $model = CashAtHand::class;
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Cash at Hand';
     protected static ?string $slug = 'cash-at-hand';
     protected static ?int $navigationSort = 22;

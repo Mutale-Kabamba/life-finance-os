@@ -20,6 +20,7 @@ class LedgerTransactionResource extends Resource
     protected static ?string $model = LedgerTransaction::class;
     protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Transactions';
     protected static ?int $navigationSort = 21;
 

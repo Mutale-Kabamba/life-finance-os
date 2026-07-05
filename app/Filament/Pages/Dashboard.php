@@ -2,11 +2,18 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\DebtOverviewWidget;
+use App\Filament\Widgets\FinancialOverviewWidget;
+use App\Filament\Widgets\SavingsProgressWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\HtmlString;
 
 class Dashboard extends BaseDashboard
 {
+    protected static ?string $navigationGroup = 'Personal Finance';
+    protected static ?string $navigationLabel = 'Personal Dashboard';
+    protected static ?int $navigationSort = -1;
+
     public function getHeading(): HtmlString
     {
         $name = trim((string) auth()->user()?->name);
@@ -28,5 +35,14 @@ class Dashboard extends BaseDashboard
         $safeName = e($firstName);
 
         return new HtmlString($greeting . ', <span style="color: ' . $nameColor . ';">' . $safeName . '</span>!');
+    }
+
+    public function getWidgets(): array
+    {
+        return [
+            FinancialOverviewWidget::class,
+            SavingsProgressWidget::class,
+            DebtOverviewWidget::class,
+        ];
     }
 }

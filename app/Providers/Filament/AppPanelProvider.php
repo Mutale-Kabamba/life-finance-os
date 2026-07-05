@@ -37,13 +37,13 @@ class AppPanelProvider extends PanelProvider
             ->profile()
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn (): string => '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
+                fn (): string => '<link rel="icon" type="image/png" href="' . asset('img/logos/icon_BG.png') . '"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
             )
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => Color::hex('#004AAD'),
                 'danger'  => Color::Rose,
                 'info'    => Color::Sky,
-                'success' => Color::Teal,
+                'success' => Color::hex('#009933'),
                 'warning' => Color::Amber,
             ])
             ->brandName('Life Finance OS')

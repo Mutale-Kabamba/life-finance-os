@@ -19,6 +19,7 @@ class StockMovementResource extends Resource
     protected static ?string $model = StockMovement::class;
     protected static ?string $navigationIcon = 'heroicon-o-arrows-up-down';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Stock Movements';
     protected static ?int $navigationSort = 5;
 

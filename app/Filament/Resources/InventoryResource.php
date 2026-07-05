@@ -22,10 +22,11 @@ class InventoryResource extends Resource
     protected static ?string $model = Inventory::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Business Finance';
+    protected static ?string $navigationParentItem = 'Business Operations';
     protected static ?string $navigationLabel = 'Products';
     protected static ?string $modelLabel = 'product';
     protected static ?string $slug = 'products';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
     {
@@ -111,15 +112,37 @@ class InventoryResource extends Resource
             ])
             ->headerActions([
                 CsvActions::export([
+                    'business_id'       => 'Business ID',
+                    'inventory_category_id' => 'Category ID',
                     'name'             => 'Name',
                     'sku'              => 'SKU',
+                    'barcode'          => 'Barcode',
                     'category.name'    => 'Category',
                     'business.name'    => 'Business',
                     'cost_price'       => 'Cost Price',
                     'selling_price'    => 'Selling Price',
                     'quantity_on_hand' => 'In Stock',
                     'reorder_level'    => 'Reorder Level',
+                    'unit'             => 'Unit',
+                    'is_active'        => 'Active (1/0)',
+                    'description'      => 'Description',
                 ], 'products'),
+                CsvActions::import(Inventory::class, [
+                    'name' => 'Name',
+                    'sku' => 'SKU',
+                    'barcode' => 'Barcode',
+                    'cost_price' => 'Cost Price',
+                    'selling_price' => 'Selling Price',
+                    'quantity_on_hand' => 'In Stock',
+                    'reorder_level' => 'Reorder Level',
+                    'unit' => 'Unit',
+                    'is_active' => 'Active (1/0)',
+                    'description' => 'Description',
+                ], fn () => [
+                    'business_id' => Business::query()->where('user_id', auth()->id())->value('id'),
+                    'unit' => 'each',
+                    'is_active' => true,
+                ], ['cost_price', 'selling_price', 'quantity_on_hand', 'reorder_level']),
             ])
             ->actions([
                 Tables\Actions\Action::make('adjustStock')
