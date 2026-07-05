@@ -6,6 +6,7 @@
     <meta name="description" content="Life Finance OS is a modern financial MIS for personal, family, and business finance management.">
 
     <title>{{ config('app.name', 'Life Finance OS') }} — Modern Financial MIS</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/logos/icon_BG.png') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
@@ -93,8 +94,56 @@
             display: block;
         }
         .nav-links { display: flex; align-items: center; gap: 4px; font-size: .92rem; color: var(--muted); }
-        .nav-links a { padding: 8px 14px; border-radius: 10px; transition: .18s ease; }
-        .nav-links a:hover { background: var(--mint-1); color: var(--ink); }
+        .nav-links > a,
+        .nav-dropdown-toggle {
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: .18s ease;
+            cursor: pointer;
+        }
+        .nav-links > a:hover,
+        .nav-dropdown-toggle:hover { background: var(--mint-1); color: var(--ink); }
+        .nav-links > a.active,
+        .nav-dropdown-toggle.active,
+        .mobile-links a.active {
+            background: color-mix(in srgb, var(--mint-1) 75%, #c7f6d9 25%);
+            color: var(--ink);
+            font-weight: 600;
+        }
+        .nav-dropdown {
+            position: relative;
+        }
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 250px;
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            z-index: 50;
+        }
+        .nav-dropdown:hover .nav-dropdown-menu,
+        .nav-dropdown:focus-within .nav-dropdown-menu {
+            display: block;
+        }
+        .nav-dropdown-menu a {
+            display: block;
+            padding: 9px 10px;
+            border-radius: 8px;
+            color: var(--muted);
+        }
+        .nav-dropdown-menu a:hover {
+            background: var(--mint-1);
+            color: var(--ink);
+        }
+        [data-theme="dark"] .nav-dropdown-menu {
+            background: #101a17;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+        }
         .nav-actions { display: flex; align-items: center; gap: 10px; }
         .menu-toggle,
         .theme-toggle {
@@ -233,7 +282,14 @@
             text-wrap: pretty;
         }
         .hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-        .hero-note { margin-top: 16px; font-size: .85rem; color: rgba(203, 220, 212, 0.85); }
+        .hero-note {
+            margin-top: 16px;
+            font-size: .85rem;
+            color: rgba(203, 220, 212, 0.85);
+            margin-inline: auto;
+            text-align: center;
+            max-width: none;
+        }
         .hero-copy {
             transition: opacity .32s ease, transform .32s ease;
             will-change: opacity, transform;
@@ -749,6 +805,9 @@
         $registerUrl = Route::has('filament.admin.auth.register')
             ? route('filament.admin.auth.register')
             : url('/admin/register');
+        $isPolicies = request()->routeIs('privacy-policy')
+            || request()->routeIs('data-deletion-instructions')
+            || request()->routeIs('terms-and-conditions');
     @endphp
 
     <header class="nav">
@@ -759,10 +818,18 @@
             </a>
 
             <nav class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#workflow">How it works</a>
-                <a href="#faq">FAQ</a>
-                <a href="#contact">Contact</a>
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
+                <a href="{{ route('how-it-works') }}" class="{{ request()->routeIs('how-it-works') ? 'active' : '' }}">How it works</a>
+                <a href="{{ route('features-faq') }}" class="{{ request()->routeIs('features-faq') ? 'active' : '' }}">Features & FAQ</a>
+                <a href="{{ route('contacts') }}" class="{{ request()->routeIs('contacts') ? 'active' : '' }}">Contacts</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle {{ $isPolicies ? 'active' : '' }}">Policies</span>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ route('privacy-policy') }}" class="{{ request()->routeIs('privacy-policy') ? 'active' : '' }}">Privacy Policy</a>
+                        <a href="{{ route('data-deletion-instructions') }}" class="{{ request()->routeIs('data-deletion-instructions') ? 'active' : '' }}">Data Deletion Instructions</a>
+                        <a href="{{ route('terms-and-conditions') }}" class="{{ request()->routeIs('terms-and-conditions') ? 'active' : '' }}">Terms & Conditions</a>
+                    </div>
+                </div>
             </nav>
 
             <nav class="nav-actions">
@@ -781,10 +848,13 @@
         </div>
         <div class="mobile-menu" id="mobile-menu">
             <nav class="mobile-links">
-                <a href="#features">Features</a>
-                <a href="#workflow">How it works</a>
-                <a href="#faq">FAQ</a>
-                <a href="#contact">Contact</a>
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
+                <a href="{{ route('how-it-works') }}" class="{{ request()->routeIs('how-it-works') ? 'active' : '' }}">How it works</a>
+                <a href="{{ route('features-faq') }}" class="{{ request()->routeIs('features-faq') ? 'active' : '' }}">Features & FAQ</a>
+                <a href="{{ route('contacts') }}" class="{{ request()->routeIs('contacts') ? 'active' : '' }}">Contacts</a>
+                <a href="{{ route('privacy-policy') }}" class="{{ request()->routeIs('privacy-policy') ? 'active' : '' }}">Privacy Policy</a>
+                <a href="{{ route('data-deletion-instructions') }}" class="{{ request()->routeIs('data-deletion-instructions') ? 'active' : '' }}">Data Deletion Instructions</a>
+                <a href="{{ route('terms-and-conditions') }}" class="{{ request()->routeIs('terms-and-conditions') ? 'active' : '' }}">Terms & Conditions</a>
             </nav>
             <div class="mobile-actions">
                 @auth
