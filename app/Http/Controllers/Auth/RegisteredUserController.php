@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,10 +43,14 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Send the verification email explicitly so delivery does not depend on
+        // event listener wiring, which can be affected by cached events on deploy.
         try {
-            event(new Registered($user));
+            if (! $user->hasVerifiedEmail()) {
+                $user->sendEmailVerificationNotification();
+            }
         } catch (Throwable $e) {
-            Log::error('Failed to dispatch registered event/verification email', [
+            Log::error('Failed to send verification email during registration', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'message' => $e->getMessage(),
