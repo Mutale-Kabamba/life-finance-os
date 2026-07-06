@@ -1,12 +1,31 @@
 <style>
+    .fi-simple-main-ctn {
+        align-items: center;
+    }
+
+    .fi-simple-layout::after {
+        content: 'By Ori Studio Limited';
+        display: block;
+        width: 100%;
+        text-align: center;
+        color: rgb(var(--gray-500));
+        font-size: 0.75rem;
+        line-height: 1.3;
+        padding: 0 0 0.85rem;
+    }
+
+    .dark .fi-simple-layout::after {
+        color: rgb(var(--gray-400));
+    }
+
     @media (max-width: 640px) {
         .fi-simple-layout {
             padding-inline: 0.75rem;
         }
 
         .fi-simple-main-ctn {
-            align-items: flex-start;
-            padding-top: 0.5rem;
+            align-items: center;
+            padding-top: 0.75rem;
             padding-bottom: 0.75rem;
         }
 
