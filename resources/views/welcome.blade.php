@@ -519,10 +519,11 @@
 
         /* Footer */
         footer { border-top: 1px solid var(--line); padding: 36px 0; }
-        .foot-inner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: .88rem; text-align: center; }
-        .foot-links { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+        .foot-inner { display: flex; flex-direction: column; align-items: stretch; gap: 12px; color: var(--muted); font-size: .88rem; }
+        .foot-links { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: center; }
         .foot-links a { color: inherit; text-decoration: none; }
         .foot-links a:hover { color: var(--ink); }
+        .foot-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
 
         .reveal { opacity: 0; animation: revealUp .7s ease forwards; }
         .delay-1 { animation-delay: .1s; } .delay-2 { animation-delay: .2s; }
@@ -728,6 +729,12 @@
 
             .foot-inner {
                 font-size: .82rem;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .foot-meta {
+                flex-direction: column;
                 justify-content: center;
                 text-align: center;
             }
@@ -1221,7 +1228,10 @@
                 <a href="{{ route('data-deletion-instructions') }}">Data Deletion</a>
                 <a href="{{ route('terms-and-conditions') }}">Terms & Conditions</a>
             </div>
-            <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}. Your complete financial operating system.</span>
+            <div class="foot-meta">
+                <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}.</span>
+                <span>Your complete financial operating system.</span>
+            </div>
         </div>
     </footer>
 
