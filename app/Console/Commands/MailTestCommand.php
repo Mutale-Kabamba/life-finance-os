@@ -9,7 +9,7 @@ use Throwable;
 
 class MailTestCommand extends Command
 {
-    protected $signature = 'mail:test {email} {--from=} {--verify}';
+    protected $signature = 'mail:test {email} {--from=} {--verify : Send a real email verification notification to an existing user}';
 
     protected $description = 'Send a test email (or a real verification email with --verify) to check mail delivery on the current environment.';
 
@@ -17,6 +17,7 @@ class MailTestCommand extends Command
     {
         $to = (string) $this->argument('email');
         $from = $this->option('from') ?: config('mail.from.address');
+        $verify = (bool) $this->option('verify');
 
         $this->line('Mailer:  '.config('mail.default'));
         $this->line('Host:    '.config('mail.mailers.smtp.host'));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Business;
+use App\Support\ReportPdfBuilder;
 use App\Services\Accounting\LedgerSummaryService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -85,6 +86,28 @@ class FinancialReports extends Page implements HasForms
                 ->label('Generate')
                 ->icon('heroicon-o-arrow-path')
                 ->action('generate'),
+            Action::make('downloadPdf')
+                ->label('PDF')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+                    $this->generate();
+
+                    $data = $this->form->getState();
+                    $business = Business::query()->where('user_id', auth()->id())->find((int) ($data['business_id'] ?? 0));
+
+                    if (! $business || ! $this->incomeStatement || ! $this->balanceSheet || ! $this->trialBalance) {
+                        return null;
+                    }
+
+                    return app(ReportPdfBuilder::class)->downloadFinancialReports(
+                        $business,
+                        (string) $data['start'],
+                        (string) $data['end'],
+                        $this->incomeStatement,
+                        $this->balanceSheet,
+                        $this->trialBalance,
+                    );
+                }),
         ];
     }
 

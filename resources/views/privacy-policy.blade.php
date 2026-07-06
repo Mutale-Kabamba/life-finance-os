@@ -10,49 +10,51 @@
 @section('content')
     <section class="section" style="padding-top: 8px;">
         <div class="section-head reveal">
-            <span class="eyebrow">Privacy Terms</span>
-            <h2>Your data and your rights</h2>
+            <span class="eyebrow">Privacy Overview</span>
+            <h2>Your data, your rights, and our responsibility</h2>
             <p>Last updated: {{ now()->format('F j, Y') }}</p>
         </div>
 
-        <div class="grid reveal delay-1">
-            <article class="card">
-            <h3>1. Information We Collect</h3>
-            <ul>
-                <li>Account details such as your name, email address, and login provider information.</li>
-                <li>Financial and profile data that you enter while using the app.</li>
-                <li>Technical data such as browser information and usage logs for security and diagnostics.</li>
-            </ul>
-            </article>
+        <div class="faq-wrap reveal delay-1">
+            <details class="faq-item" open>
+                <summary>Our commitment to your privacy</summary>
+                <div class="faq-content">We design Life Finance OS to help you manage sensitive financial information with clarity and care. Privacy is a core part of product decisions, not an afterthought.</div>
+            </details>
 
-            <article class="card">
-            <h3>2. How We Use Information</h3>
-            <ul>
-                <li>To provide and improve app features.</li>
-                <li>To secure accounts and prevent abuse.</li>
-                <li>To communicate important account and service updates.</li>
-            </ul>
-            </article>
+            <details class="faq-item">
+                <summary>Information we collect</summary>
+                <div class="faq-content">We collect account details such as your name, email, and authentication provider, plus the financial records you choose to enter. We also collect limited technical data for security, reliability, and diagnostics.</div>
+            </details>
 
-            <article class="card">
-            <h3>3. Data Sharing</h3>
-            <p>We do not sell your personal data. Data may be shared with service providers only when necessary to operate the app (for example, authentication or infrastructure services).</p>
-            </article>
+            <details class="faq-item">
+                <summary>Why we collect it</summary>
+                <div class="faq-content">We use your information to provide core app functionality, maintain account security, improve product quality, and communicate important account or service updates.</div>
+            </details>
 
-            <article class="card">
-            <h3>4. Data Retention</h3>
-            <p>We retain your data for as long as your account is active or as required by law. You can request deletion of your account data.</p>
-            </article>
+            <details class="faq-item">
+                <summary>How we protect your data</summary>
+                <div class="faq-content">We apply practical safeguards such as secure authentication flows, account verification, and controlled access patterns to reduce unauthorized access risk.</div>
+            </details>
 
-            <article class="card">
-            <h3>5. Your Rights</h3>
-            <p>You may request access, correction, or deletion of your personal data by contacting us.</p>
-            </article>
+            <details class="faq-item">
+                <summary>Data sharing</summary>
+                <div class="faq-content">We do not sell your personal data. We may share data only with service providers that help operate the platform, such as authentication, email, or infrastructure partners.</div>
+            </details>
 
-            <article class="card">
-            <h3>6. Contact</h3>
-            <p>For privacy questions, contact us at <a href="mailto:support@oristudio.com">support@oristudio.com</a>.</p>
-            </article>
+            <details class="faq-item">
+                <summary>Your rights</summary>
+                <div class="faq-content">You can request access, correction, or deletion of your personal data. We also provide policy pages that explain account and data deletion steps.</div>
+            </details>
+
+            <details class="faq-item">
+                <summary>Data retention</summary>
+                <div class="faq-content">We retain account data for as long as your account is active or as needed for legal and operational requirements. If you request deletion, we process it according to applicable retention obligations.</div>
+            </details>
+
+            <details class="faq-item">
+                <summary>Contact us</summary>
+                <div class="faq-content">For privacy-related questions, email <a href="mailto:support@oristudio.com">support@oristudio.com</a>.</div>
+            </details>
         </div>
     </section>
 @endsection

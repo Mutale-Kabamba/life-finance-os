@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BudgetResource\RelationManagers;
 use App\Models\AccountTransaction;
 use App\Models\BudgetItem;
 use App\Models\Expense;
+use App\Support\ExpenseCategoryDefaults;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -25,7 +26,14 @@ class ItemsRelationManager extends RelationManager
         return $form->schema([
             Forms\Components\Select::make('expense_category_id')
                 ->label('Category')
-                ->relationship('category', 'name')
+                ->options(fn (): array => ExpenseCategoryDefaults::options())
+                ->createOptionForm([
+                    Forms\Components\TextInput::make('name')
+                        ->label('New category name')
+                        ->required()
+                        ->maxLength(100),
+                ])
+                ->createOptionUsing(fn (array $data): int => ExpenseCategoryDefaults::createFromName((string) ($data['name'] ?? '')))
                 ->searchable()->preload()->required(),
             Forms\Components\TextInput::make('name')
                 ->label('What to buy')

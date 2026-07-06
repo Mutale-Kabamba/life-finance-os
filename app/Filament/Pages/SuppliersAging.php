@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Business;
+use App\Support\ReportPdfBuilder;
 use App\Services\Accounting\LedgerSummaryService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -73,6 +74,25 @@ class SuppliersAging extends Page implements HasForms
                 ->label('Generate')
                 ->icon('heroicon-o-arrow-path')
                 ->action('generate'),
+            Action::make('downloadPdf')
+                ->label('PDF')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+                    $this->generate();
+
+                    $data = $this->form->getState();
+                    $business = Business::query()->where('user_id', auth()->id())->find((int) ($data['business_id'] ?? 0));
+
+                    if (! $business || ! $this->report) {
+                        return null;
+                    }
+
+                    return app(ReportPdfBuilder::class)->downloadSuppliersAging(
+                        $business,
+                        (string) $data['as_of'],
+                        $this->report,
+                    );
+                }),
         ];
     }
 

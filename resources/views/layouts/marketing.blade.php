@@ -598,7 +598,11 @@
         }
 
         footer { border-top: 1px solid var(--line); padding: 26px 0; margin-top: 36px; }
-        .foot-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: .88rem; }
+        .foot-inner { display: flex; flex-direction: column; align-items: stretch; gap: 12px; color: var(--muted); font-size: .88rem; }
+        .foot-links { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: center; }
+        .foot-links a { color: inherit; text-decoration: none; }
+        .foot-links a:hover { color: var(--ink); }
+        .foot-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
 
         @media (max-width: 980px) {
             .nav-links,
@@ -644,6 +648,17 @@
             .cta {
                 padding: 38px 20px;
                 border-radius: 20px;
+            }
+
+            .foot-inner {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .foot-meta {
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
             }
         }
     </style>
@@ -722,8 +737,8 @@
 
         <section class="hero">
             <span class="pill reveal"><span class="dot"></span> @yield('hero_pill', 'Personal · Family · Business · Wealth')</span>
-            <h1 class="reveal">@yield('hero_title_prefix', 'One dashboard,') <span class="grad">@yield('hero_title_highlight', 'total financial control.')</span></h1>
-            <p class="lede reveal delay-1">@yield('hero_caption', config('app.name', 'Life Finance OS') . ' brings every part of your financial life into one calm, modern dashboard.') </p>
+            <h1 class="reveal">@yield('hero_title_prefix', 'All your finances,') <span class="grad">@yield('hero_title_highlight', 'one operating system.')</span></h1>
+            <p class="lede reveal delay-1">@yield('hero_caption', config('app.name', 'Life Finance OS') . ' connects personal finance, family planning, business operations, and wealth tracking in one clear platform.') </p>
             <div class="hero-actions reveal delay-1">
                 @auth
                     <a href="{{ url('/admin') }}" class="btn btn-primary">Open your dashboard</a>
@@ -732,7 +747,7 @@
                     <a href="{{ $loginUrl }}" class="btn btn-outline">Log in</a>
                 @endauth
             </div>
-            <p class="hero-note reveal delay-1">No credit card required · Set up in minutes</p>
+            <p class="hero-note reveal delay-1">Secure authentication · Email verification · Privacy-first architecture · Export your data anytime</p>
 
             @if ($showHeroPreview)
             <div class="preview reveal delay-2" aria-label="Dashboard preview">
@@ -791,13 +806,13 @@
         <section class="section" style="padding-top: 0;">
             <div class="container">
                 <div class="cta reveal delay-1">
-                    <h2>Ready to simplify your financial life?</h2>
-                    <p>Start in minutes and bring personal, family, business, and wealth data into one clear workflow.</p>
+                    <h2>Start managing your finances in one place.</h2>
+                    <p>Move from scattered tools to one connected system for planning, operations, and confident decisions.</p>
                     <div class="hero-actions">
                         @auth
                             <a href="{{ url('/admin') }}" class="btn btn-primary">Open your dashboard</a>
                         @else
-                            <a href="{{ $registerUrl }}" class="btn btn-primary">Create free account</a>
+                            <a href="{{ $registerUrl }}" class="btn btn-primary">Get started free</a>
                             <a href="{{ $loginUrl }}" class="btn btn-outline">Log in</a>
                         @endauth
                     </div>
@@ -808,8 +823,19 @@
 
     <footer>
         <div class="container foot-inner">
-            <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}. All rights reserved.</span>
-            <span>Your money, all in one place.</span>
+            <div class="foot-links">
+                <a href="{{ route('home') }}">Home</a>
+                <a href="{{ route('how-it-works') }}">How it works</a>
+                <a href="{{ route('features-faq') }}">Features & FAQ</a>
+                <a href="{{ route('contacts') }}">Contacts</a>
+                <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                <a href="{{ route('data-deletion-instructions') }}">Data Deletion</a>
+                <a href="{{ route('terms-and-conditions') }}">Terms & Conditions</a>
+            </div>
+            <div class="foot-meta">
+                <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}.</span>
+                <span>Your complete financial operating system.</span>
+            </div>
         </div>
     </footer>
 

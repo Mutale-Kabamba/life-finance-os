@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
-use App\Models\ExpenseCategory;
+use App\Support\ExpenseCategoryDefaults;
 use App\Support\CsvActions;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -28,7 +28,14 @@ class ExpenseResource extends Resource
                     ->required()->maxLength(255),
                 Forms\Components\Select::make('expense_category_id')
                     ->label('Category')
-                    ->relationship('category', 'name')
+                    ->options(fn (): array => ExpenseCategoryDefaults::options())
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->label('New category name')
+                            ->required()
+                            ->maxLength(100),
+                    ])
+                    ->createOptionUsing(fn (array $data): int => ExpenseCategoryDefaults::createFromName((string) ($data['name'] ?? '')))
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -72,7 +79,7 @@ class ExpenseResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('expense_category_id')
                     ->label('Category')
-                    ->relationship('category', 'name'),
+                    ->options(fn (): array => ExpenseCategoryDefaults::options()),
                 Tables\Filters\Filter::make('this_month')
                     ->query(fn (Builder $query) => $query->whereMonth('expense_date', now()->month))
                     ->label('This Month'),
@@ -98,7 +105,7 @@ class ExpenseResource extends Resource
                     ],
                     fn () => [
                         'user_id'             => auth()->id(),
-                        'expense_category_id' => ExpenseCategory::query()->value('id'),
+                        'expense_category_id' => ExpenseCategoryDefaults::defaultCategoryId(),
                     ],
                     ['amount'],
                 ),

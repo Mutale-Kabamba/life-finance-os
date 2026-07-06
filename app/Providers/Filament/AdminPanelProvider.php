@@ -48,6 +48,10 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => view('filament.sidebar-theme')->render(),
             )
             ->renderHook(
+                PanelsRenderHook::STYLES_AFTER,
+                fn (): string => view('filament.auth-mobile-theme')->render(),
+            )
+            ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
                 fn (): string => view('filament.sidebar-footer')->render(),
             )

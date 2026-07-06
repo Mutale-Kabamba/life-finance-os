@@ -70,6 +70,29 @@ class WealthOverviewWidget extends Widget
         $activeInvestments = (int) (clone $investmentQuery)->where('status', 'active')->count();
         $totalInvestments = (int) (clone $investmentQuery)->count();
 
+        $investmentRows = (clone $investmentQuery)
+            ->get(['type', 'current_value', 'details', 'maturity_date']);
+
+        $investmentTypeHighlights = $investmentRows
+            ->groupBy('type')
+            ->map(function ($group, string $type): array {
+                return [
+                    'label' => $this->investmentTypeLabel($type),
+                    'count' => $group->count(),
+                    'value' => (float) $group->sum(fn (Investment $investment): float => (float) $investment->current_value),
+                ];
+            })
+            ->sortByDesc('value')
+            ->take(3)
+            ->values()
+            ->all();
+
+        $upcomingMaturities = $investmentRows
+            ->filter(fn (Investment $investment): bool => in_array((string) $investment->type, ['treasury_bills', 'bonds', 'fixed_deposit'], true))
+            ->filter(fn (Investment $investment): bool => $investment->maturity_date !== null)
+            ->filter(fn (Investment $investment): bool => $investment->maturity_date->between(now()->startOfDay(), now()->copy()->addDays(120)->endOfDay()))
+            ->count();
+
         $portfolioValue = $assetCurrent + $investmentCurrent;
         $portfolioCost = $assetPurchase + $investmentInitial;
         $portfolioGain = $portfolioValue - $portfolioCost;
@@ -78,6 +101,8 @@ class WealthOverviewWidget extends Widget
             'description' => $this->getHorizonDescription($horizon),
             'activeHorizon' => $horizon,
             'horizonLabel' => $horizonLabel,
+            'investmentTypeHighlights' => $investmentTypeHighlights,
+            'upcomingMaturities' => $upcomingMaturities,
             'horizonFilters' => [
                 ['value' => 'all', 'label' => 'All'],
                 ['value' => 'short', 'label' => 'Short-term'],
@@ -174,6 +199,23 @@ class WealthOverviewWidget extends Widget
             'medium' => 'Showing medium-term positions | 3 to 10 years',
             'long' => 'Showing long-term positions | 10+ years',
             default => 'Showing short-term positions | 1 day to 3 years',
+        };
+    }
+
+    protected function investmentTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'stocks' => 'Listed Shares',
+            'bonds' => 'Bonds',
+            'treasury_bills' => 'Treasury Bills',
+            'fixed_deposit' => 'Fixed Deposits',
+            'unit_trust' => 'Unit Trusts',
+            'mutual_fund' => 'Mutual Funds',
+            'real_estate' => 'Real Estate',
+            'cryptocurrency' => 'Crypto',
+            'business' => 'Business Equity',
+            'farming' => 'Farming',
+            default => 'Other',
         };
     }
 }

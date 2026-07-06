@@ -215,8 +215,8 @@
             margin: 18px auto 0;
             max-width: 1200px;
             border-radius: 28px;
-            padding: 92px 24px 96px;
-            min-height: 680px;
+            padding: 76px 24px 82px;
+            min-height: 620px;
             text-align: center;
             overflow: hidden;
             background: transparent;
@@ -302,7 +302,7 @@
         /* Floating dashboard card */
         .preview {
             position: relative;
-            margin: 56px auto 0;
+            margin: 34px auto 0;
             max-width: 880px;
             background: #fff;
             border: 1px solid var(--line);
@@ -519,7 +519,11 @@
 
         /* Footer */
         footer { border-top: 1px solid var(--line); padding: 36px 0; }
-        .foot-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: .88rem; }
+        .foot-inner { display: flex; flex-direction: column; align-items: stretch; gap: 12px; color: var(--muted); font-size: .88rem; }
+        .foot-links { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: center; }
+        .foot-links a { color: inherit; text-decoration: none; }
+        .foot-links a:hover { color: var(--ink); }
+        .foot-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
 
         .reveal { opacity: 0; animation: revealUp .7s ease forwards; }
         .delay-1 { animation-delay: .1s; } .delay-2 { animation-delay: .2s; }
@@ -725,6 +729,14 @@
 
             .foot-inner {
                 font-size: .82rem;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .foot-meta {
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
             }
         }
 
@@ -870,10 +882,9 @@
     <main>
         <section class="hero">
             <span class="pill reveal"><span class="dot"></span> Personal · Family · Business · Wealth</span>
-            <h1 class="reveal hero-copy" id="hero-heading">Your money, <span class="grad" id="hero-highlight">simple and clear.</span></h1>
+            <h1 class="reveal hero-copy" id="hero-heading">All your finances, <span class="grad" id="hero-highlight">one operating system.</span></h1>
             <p class="lede reveal delay-1 hero-copy" id="hero-caption">
-                {{ config('app.name', 'Life Finance OS') }} brings every part of your financial life into one calm,
-                modern dashboard — so you always know where you stand.
+                Manage personal finance, family budgets, business operations, and wealth tracking from one connected platform.
             </p>
             <div class="hero-actions reveal delay-1">
                 @auth
@@ -883,12 +894,12 @@
                     <a href="{{ $loginUrl }}" class="btn btn-outline">Log in</a>
                 @endauth
             </div>
-            <p class="hero-note reveal delay-1">No credit card required · Set up in minutes</p>
+            <p class="hero-note reveal delay-1">Secure authentication · Email verification · Privacy-first architecture · Export your data anytime</p>
 
             <div class="preview reveal delay-2" aria-label="Dashboard preview">
                 <div class="preview-top">
                     <div class="preview-title">
-                        Financial overview
+                        Life Finance OS dashboard
                         <small>Updated just now</small>
                     </div>
                     <div class="win-dots"><i></i><i></i><i></i></div>
@@ -933,23 +944,47 @@
 
         <section class="logos">
             <div class="container">
-                <p>One place for every part of your financial life</p>
+                <p>Personal and Business Finance in One Platform</p>
                 <div class="logo-row">
                     <span>Personal</span>
                     <span>Family</span>
                     <span>Business</span>
                     <span>Wealth</span>
-                    <span>Reports</span>
+                    <span>Reporting</span>
                 </div>
             </div>
         </section>
 
-        <section class="section" id="features">
+        <section class="section" id="problem" style="padding-top: 16px;">
             <div class="container">
                 <div class="section-head reveal">
-                    <span class="eyebrow">Everything you need</span>
-                    <h2>One platform for every part of your financial life</h2>
-                    <p>From daily spending to long-term wealth, every module works together.</p>
+                    <span class="eyebrow">Financial Management Made Simple</span>
+                    <h2>Managing money should not require five different apps.</h2>
+                    <p>Most people split budgeting, invoices, investments, debts, and family planning across disconnected tools. Life Finance OS brings everything together so decisions feel clear, not stressful.</p>
+                </div>
+                <div class="grid reveal delay-1">
+                    <article class="card">
+                        <h3>From scattered spreadsheets</h3>
+                        <p>Stop jumping between files and apps just to understand your current position.</p>
+                    </article>
+                    <article class="card">
+                        <h3>From reactive decisions</h3>
+                        <p>See obligations early, track progress continuously, and act before small gaps become big problems.</p>
+                    </article>
+                    <article class="card">
+                        <h3>To one connected system</h3>
+                        <p>Personal, family, business, and wealth workflows share one source of financial truth.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="features" style="padding-top:0;">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Platform Outcomes</span>
+                    <h2>Personal and Business Finance in One Platform</h2>
+                    <p>Every area is designed around outcomes you can feel in your daily financial life.</p>
                 </div>
 
                 <div class="grid reveal delay-1">
@@ -957,25 +992,48 @@
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0v.75H4.5v-.75Z"/></svg>
                         </div>
-                        <h3>Personal Finance</h3>
-                        <p>Track income, expenses, debts, and savings goals with budgets that keep you on target.</p>
+                        <h3>Know where every kwacha goes.</h3>
+                        <p>Track income, expenses, budgets, savings, debts, and obligations without juggling multiple apps.</p>
                     </article>
 
                     <article class="card">
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12 12 3l9.75 9M4.5 10.5V21h15V10.5"/></svg>
                         </div>
-                        <h3>Family</h3>
-                        <p>Manage a shared household budget, plan for children, and align finances with your spouse.</p>
+                        <h3>Plan together. Spend smarter.</h3>
+                        <p>Share responsibilities and coordinate household goals with visibility everyone can trust.</p>
                     </article>
 
                     <article class="card">
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15v18h-15V3Zm3 4.5h3m-3 4h3m-3 4h3m4.5-8h.75m-.75 4h.75m-.75 4h.75"/></svg>
                         </div>
-                        <h3>Business Finance</h3>
-                        <p>Invoices, inventory, suppliers, customers, and payroll — keep your business books in order.</p>
+                        <h3>Run your business finances with confidence.</h3>
+                        <p>Manage customers, quotations, invoices, inventory, payments, and cash flow in one workflow.</p>
                     </article>
+
+                    <article class="card">
+                        <div class="card-icon">
+                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25l3.75 3.75 6.75-6.75M21 9V4.5h-4.5"/></svg>
+                        </div>
+                        <h3>Grow what you have built.</h3>
+                        <p>Monitor assets and investments with a long-term view of progress, risk, and momentum.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="benefits" style="padding-top:0;">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Why It Matters</span>
+                    <h2>Less manual work. Better financial decisions.</h2>
+                    <p>Life Finance OS helps you move from uncertainty to consistency with clear, practical workflows.</p>
+                </div>
+                <div class="grid reveal delay-1">
+                    <article class="card"><h3>One financial picture</h3><p>See personal, family, business, and wealth information without context switching.</p></article>
+                    <article class="card"><h3>Better planning</h3><p>Use real numbers to set budgets, review cash flow, and stay ahead of obligations.</p></article>
+                    <article class="card"><h3>Smarter decisions</h3><p>Clear dashboards and organized records make next steps obvious and actionable.</p></article>
                 </div>
             </div>
         </section>
@@ -983,9 +1041,9 @@
         <section class="section" id="workflow" style="padding-top:0;">
             <div class="container">
                 <div class="section-head reveal">
-                    <span class="eyebrow">How it works</span>
-                    <h2>From messy numbers to a clear picture</h2>
-                    <p>Three simple steps to get your whole financial life in order.</p>
+                    <span class="eyebrow">How It Works</span>
+                    <h2>Three simple steps to financial control.</h2>
+                    <p>Capture, monitor, and improve with one connected process.</p>
                 </div>
 
                 <div class="grid reveal delay-1">
@@ -993,23 +1051,38 @@
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         </div>
-                        <h3>1. Add your accounts</h3>
-                        <p>Bring in income, expenses, debts, and business records in one organised place.</p>
+                        <h3>1. Bring everything into one place.</h3>
+                        <p>Import or record income, expenses, accounts, debts, assets, and business activity.</p>
                     </article>
                     <article class="card">
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                         </div>
-                        <h3>2. Stay in control</h3>
-                        <p>Set budgets and goals, then let automatic tracking keep everything up to date.</p>
+                        <h3>2. Stay on top of your finances.</h3>
+                        <p>Track transactions, obligations, and milestones with dashboards that update as you work.</p>
                     </article>
                     <article class="card">
                         <div class="card-icon">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25l3.75 3.75 6.75-6.75M21 9V4.5h-4.5"/></svg>
                         </div>
-                        <h3>3. Grow with clarity</h3>
-                        <p>Watch clear reports and insights turn everyday decisions into lasting wealth.</p>
+                        <h3>3. Make smarter decisions.</h3>
+                        <p>Use reports and trends to choose what to do next with confidence.</p>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="trust" style="padding-top:0;">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="eyebrow">Trust</span>
+                    <h2>Built for reliable financial workflows</h2>
+                    <p>Practical safeguards that help you manage sensitive financial data with confidence.</p>
+                </div>
+                <div class="grid reveal delay-1">
+                    <article class="card"><h3>Secure authentication</h3><p>Protected account access with email verification and password reset support.</p></article>
+                    <article class="card"><h3>Role-based access</h3><p>Keep records organized by user and context for cleaner, safer operations.</p></article>
+                    <article class="card"><h3>Export your data anytime</h3><p>Generate reports and keep your records available when you need them.</p></article>
                 </div>
             </div>
         </section>
@@ -1019,28 +1092,28 @@
                 <div class="section-head reveal">
                     <span class="eyebrow">FAQ</span>
                     <h2>Frequently asked questions</h2>
-                    <p>Everything you need to know before getting started.</p>
+                    <p>Quick answers before you create your free account.</p>
                 </div>
 
                 <div class="faq-wrap reveal delay-1">
                     <details class="faq-item" open>
-                        <summary>Can I manage personal, family, and business finances together?</summary>
-                        <div class="faq-content">Yes. Life Finance OS is designed to unify personal, family, and business finance workflows in one place while keeping your data organized by context.</div>
+                        <summary>Can I manage personal and business finances separately?</summary>
+                        <div class="faq-content">Yes. You can track each area independently while still seeing an overall financial picture when you need it.</div>
                     </details>
 
                     <details class="faq-item">
-                        <summary>How do budget purchases update the system?</summary>
-                        <div class="faq-content">When an item is marked as bought, actual spending is synced to your budget totals and can create linked expense and account transaction records.</div>
+                        <summary>Do I need accounting knowledge to use Life Finance OS?</summary>
+                        <div class="faq-content">No. The interface is built for everyday users and business owners, with practical labels and guided workflows.</div>
                     </details>
 
                     <details class="faq-item">
-                        <summary>Is there dark mode support?</summary>
-                        <div class="faq-content">Yes. Use the theme toggle in the top navigation on the landing page to switch between light and dark mode.</div>
+                        <summary>Can I start small and add more later?</summary>
+                        <div class="faq-content">Absolutely. Many users begin with one module, then expand into family, business, or wealth features as they grow.</div>
                     </details>
 
                     <details class="faq-item">
-                        <summary>Can I start without entering all my data at once?</summary>
-                        <div class="faq-content">Absolutely. You can begin with your key accounts and budgets, then progressively add expenses, debts, savings goals, and business records.</div>
+                        <summary>Will I receive reminders for important obligations?</summary>
+                        <div class="faq-content">Yes. You can set reminders for due dates and recurring obligations so fewer things slip through the cracks.</div>
                     </details>
                 </div>
             </div>
@@ -1050,14 +1123,14 @@
             <div class="container">
                 <div class="section-head reveal">
                     <span class="eyebrow">Contact</span>
-                    <h2>Contact us</h2>
-                    <p>Have questions, feedback, or need help with setup? Send us a message.</p>
+                    <h2>Questions? We are here to help.</h2>
+                    <p>Whether you need help getting started, have product questions, or want to discuss partnerships, our team is ready to assist.</p>
                 </div>
 
                 <div class="contact-grid reveal delay-1">
                     <div class="contact-card">
                         <h3>Send a message</h3>
-                        <p>Tell us a bit about what you need and our team will get back to you.</p>
+                        <p>Share what you need and we will guide you to the right next step.</p>
 
                         <form class="contact-form" action="javascript:void(0)">
                             <div class="contact-row">
@@ -1116,8 +1189,8 @@
                                 <span>Mon - Fri, 08:00 - 17:00 CAT</span>
                             </div>
                             <div class="contact-pill">
-                                <b>Location</b>
-                                <span>Lusaka, Zambia</span>
+                                <b>Response time</b>
+                                <span>We typically respond within one business day.</span>
                             </div>
                         </div>
                     </aside>
@@ -1128,15 +1201,15 @@
         <section class="section" style="padding-top:0;">
             <div class="container">
                 <div class="cta reveal">
-                    <span class="eyebrow" style="color:#6ee7b7;">Start today</span>
-                    <h2>Take control of your finances</h2>
-                    <p>Join {{ config('app.name', 'Life Finance OS') }} and bring calm and clarity to your money.</p>
+                    <span class="eyebrow" style="color:#6ee7b7;">Get started</span>
+                    <h2>Start managing your finances in one place.</h2>
+                    <p>Move from uncertainty to clarity with one connected platform for planning, operations, and growth.</p>
                     <div class="hero-actions">
                         @auth
                             <a href="{{ url('/admin') }}" class="btn btn-light">Go to your dashboard</a>
                         @else
-                            <a href="{{ $registerUrl }}" class="btn btn-light">Create your account</a>
-                            <a href="{{ $loginUrl }}" class="btn btn-clear">Log in</a>
+                            <a href="{{ $registerUrl }}" class="btn btn-light">Get started free</a>
+                            <a href="{{ route('how-it-works') }}" class="btn btn-clear">See how it works</a>
                         @endauth
                     </div>
                 </div>
@@ -1146,10 +1219,22 @@
 
     <footer>
         <div class="container foot-inner">
-            <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}. All rights reserved.</span>
-            <span>Your money, all in one place.</span>
+            <div class="foot-links">
+                <a href="{{ route('home') }}">Home</a>
+                <a href="{{ route('how-it-works') }}">How it works</a>
+                <a href="{{ route('features-faq') }}">Features & FAQ</a>
+                <a href="{{ route('contacts') }}">Contacts</a>
+                <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                <a href="{{ route('data-deletion-instructions') }}">Data Deletion</a>
+                <a href="{{ route('terms-and-conditions') }}">Terms & Conditions</a>
+            </div>
+            <div class="foot-meta">
+                <span>© {{ date('Y') }} {{ config('app.name', 'Life Finance OS') }}.</span>
+                <span>Your complete financial operating system.</span>
+            </div>
         </div>
     </footer>
+
     <script>
         (() => {
             const root = document.documentElement;
@@ -1194,34 +1279,34 @@
 
             const heroSlides = [
                 {
-                    lead: 'Your money,',
-                    highlight: 'simple and clear.',
-                    caption: "{{ config('app.name', 'Life Finance OS') }} brings every part of your financial life into one calm, modern dashboard — so you always know where you stand.",
+                    lead: 'All your finances,',
+                    highlight: 'one operating system.',
+                    caption: 'Manage personal finance, family budgets, business operations, and wealth tracking from one connected platform.',
                 },
                 {
                     lead: 'Plan better,',
-                    highlight: 'spend with confidence.',
-                    caption: 'Build budgets, track real spending, and stay on top of every kwacha in real time.',
+                    highlight: 'operate smarter.',
+                    caption: 'Replace disconnected apps with one clear system for cash flow, obligations, and reporting.',
                 },
                 {
-                    lead: 'Start now,',
-                    highlight: 'free for all.',
-                    caption: 'Enjoy full access at no cost for everyone through Fall 2027 — launch now while the offer is live.',
+                    lead: 'Reduce stress,',
+                    highlight: 'gain clarity.',
+                    caption: 'Know what needs attention now and what can wait, with dashboards built for practical decisions.',
                 },
                 {
-                    lead: 'One dashboard,',
-                    highlight: 'total financial control.',
-                    caption: 'Personal, family, and business finances all connected in one place.',
+                    lead: 'One connected view,',
+                    highlight: 'better decisions.',
+                    caption: 'Track spending, collections, invoices, and growth in one place instead of multiple tools.',
                 },
                 {
                     lead: 'Track progress,',
-                    highlight: 'grow with clarity.',
-                    caption: 'See what is budgeted versus what is spent, then act faster with real-time insights.',
+                    highlight: 'grow with confidence.',
+                    caption: 'See budget versus actuals, monitor trends, and improve outcomes one week at a time.',
                 },
                 {
-                    lead: 'Built for Zambia,',
-                    highlight: 'ready for your future.',
-                    caption: 'From daily cash flow to long-term goals, manage everything in ZMW with confidence.',
+                    lead: 'Built for real life,',
+                    highlight: 'ready as you grow.',
+                    caption: 'From daily money decisions to long-term wealth planning, keep everything consistent and organized.',
                 },
             ];
 

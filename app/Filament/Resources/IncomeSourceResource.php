@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\IncomeSourceResource\Pages;
+use App\Models\Account;
 use App\Models\IncomeReceipt;
 use App\Models\IncomeSource;
 use App\Support\CsvActions;
@@ -122,7 +123,12 @@ class IncomeSourceResource extends Resource
                         Forms\Components\DatePicker::make('received_date')->default(now())->required(),
                         Forms\Components\Select::make('account_id')
                             ->label('Deposit to account')
-                            ->relationship('account', 'name', fn (Builder $query) => $query->where('user_id', auth()->id())->where('is_active', true))
+                            ->options(fn (): array => Account::query()
+                                ->where('user_id', auth()->id())
+                                ->where('is_active', true)
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->searchable()->preload()->nullable(),
                         Forms\Components\TextInput::make('method')->label('Method')
                             ->placeholder('Cash, bank, mobile money...')->maxLength(50),
