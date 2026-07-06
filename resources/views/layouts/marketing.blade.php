@@ -645,6 +645,11 @@
                 padding: 38px 20px;
                 border-radius: 20px;
             }
+
+            .foot-inner {
+                justify-content: center;
+                text-align: center;
+            }
         }
     </style>
 </head>

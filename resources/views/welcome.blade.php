@@ -725,6 +725,8 @@
 
             .foot-inner {
                 font-size: .82rem;
+                justify-content: center;
+                text-align: center;
             }
         }
 
