@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BusinessResource\Pages;
 use App\Models\Business;
+use App\Support\ZambiaReferenceData;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -36,8 +38,28 @@ class BusinessResource extends Resource
                         'cooperative'     => 'Cooperative',
                         'ngo'             => 'NGO / Non-Profit',
                         'other'           => 'Other',
-                    ]),
-                Forms\Components\TextInput::make('industry')->maxLength(100),
+                    ])
+                    ->native(false),
+                Forms\Components\Select::make('industry')
+                    ->label('Industry')
+                    ->options(function (Get $get): array {
+                        $options = ZambiaReferenceData::businessIndustryOptions();
+                        $current = trim((string) $get('industry'));
+                        if ($current !== '' && ! array_key_exists($current, $options)) {
+                            $options[$current] = $current;
+                        }
+
+                        return $options;
+                    })
+                    ->searchable()
+                    ->native(false)
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Industry name')
+                            ->required()
+                            ->maxLength(100),
+                    ])
+                    ->createOptionUsing(fn (array $data): string => trim((string) ($data['name'] ?? ''))),
                 Forms\Components\TextInput::make('registration_number')->maxLength(50),
                 Forms\Components\TextInput::make('tax_number')->maxLength(50),
                 Forms\Components\DatePicker::make('established_date'),

@@ -14,6 +14,12 @@
                 Mandatory recurring commitments: ZMW {{ number_format($mandatoryMonthlyExpenses, 2) }}/{{ $periodSuffix }}
             </div>
 
+            @if(! empty($debtTypeMix))
+                <div class="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                    Debt mix: {{ $debtTypeMix }}
+                </div>
+            @endif
+
             <div class="space-y-3">
                 @foreach($debts as $debt)
                     @php
@@ -39,7 +45,10 @@
                         <div class="flex items-center justify-between mb-2">
                             <div>
                                 <span class="font-semibold text-gray-900 dark:text-white">{{ $debt['creditor_name'] }}</span>
-                                <span class="ml-2 text-xs text-gray-500 uppercase">{{ str_replace('_', ' ', $debt['type']) }}</span>
+                                <span class="ml-2 text-xs text-gray-500 uppercase">{{ $debt['type_label'] ?? str_replace('_', ' ', $debt['type']) }}</span>
+                                @if(! empty($debt['type_context']))
+                                    <div class="text-xs text-gray-500 mt-0.5">{{ $debt['type_context'] }}</div>
+                                @endif
                             </div>
                             <div class="text-right">
                                 <div class="font-bold text-danger-600">ZMW {{ number_format($debt['outstanding_balance'], 2) }}</div>

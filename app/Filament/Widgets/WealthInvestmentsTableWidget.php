@@ -63,7 +63,13 @@ class WealthInvestmentsTableWidget extends TableWidget
                     ->searchable()
                     ->weight('semibold'),
                 Tables\Columns\TextColumn::make('type')
-                    ->badge(),
+                    ->label('Type')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $this->investmentTypeLabel((string) $state)),
+                Tables\Columns\TextColumn::make('details.subtype')
+                    ->label('Subtype')
+                    ->formatStateUsing(fn ($state): string => $this->investmentSubtypeLabel($state))
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('institution')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('initial_amount')
@@ -107,5 +113,31 @@ class WealthInvestmentsTableWidget extends TableWidget
                 ->whereNotNull('start_date')
                 ->whereRaw($termYearsSql . ' <= 3'),
         };
+    }
+
+    protected function investmentTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'stocks' => 'Listed Shares',
+            'bonds' => 'Bonds',
+            'treasury_bills' => 'Treasury Bills',
+            'fixed_deposit' => 'Fixed Deposits',
+            'unit_trust' => 'Unit Trusts',
+            'mutual_fund' => 'Mutual Funds',
+            'real_estate' => 'Real Estate',
+            'cryptocurrency' => 'Crypto',
+            'business' => 'Business Equity',
+            'farming' => 'Farming',
+            default => 'Other',
+        };
+    }
+
+    protected function investmentSubtypeLabel(mixed $subtype): string
+    {
+        if (! is_string($subtype) || trim($subtype) === '') {
+            return 'N/A';
+        }
+
+        return str_replace('_', ' ', ucwords($subtype, '_'));
     }
 }

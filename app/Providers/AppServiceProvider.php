@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Business;
 use App\Models\BudgetItem;
+use App\Models\Debt;
 use App\Models\DebtPayment;
 use App\Models\Account;
 use App\Models\AccountTransaction;
@@ -16,6 +17,7 @@ use App\Observers\AccountObserver;
 use App\Observers\AccountTransactionObserver;
 use App\Observers\BudgetItemObserver;
 use App\Observers\BusinessObserver;
+use App\Observers\DebtObserver;
 use App\Observers\DebtPaymentObserver;
 use App\Observers\IncomeReceiptObserver;
 use App\Observers\LedgerTransactionObserver;
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
     {
         LedgerTransaction::observe(LedgerTransactionObserver::class);
         Business::observe(BusinessObserver::class);
+        Debt::observe(DebtObserver::class);
         StockMovement::observe(StockMovementObserver::class);
         DebtPayment::observe(DebtPaymentObserver::class);
         IncomeReceipt::observe(IncomeReceiptObserver::class);

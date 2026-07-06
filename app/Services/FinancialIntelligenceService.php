@@ -326,6 +326,26 @@ class FinancialIntelligenceService
 
     private function calculateMonthlyObligation(Debt $debt): float
     {
+        if ($debt->type === 'hire_purchase') {
+            $details = (array) $debt->details;
+            $remainingTermMonths = max((int) ($details['remaining_term_months'] ?? 0), 0);
+
+            if ($remainingTermMonths <= 0) {
+                $termMonths = max((int) ($details['term_months'] ?? 0), 0);
+                $suggestedInstallment = (float) ($details['suggested_installment'] ?? 0);
+
+                if ($termMonths > 0 && $suggestedInstallment > 0) {
+                    $remainingTermMonths = max((int) ceil((float) $debt->outstanding_balance / $suggestedInstallment), 1);
+                } else {
+                    $remainingTermMonths = $termMonths;
+                }
+            }
+
+            if ($remainingTermMonths > 0 && (float) $debt->outstanding_balance > 0) {
+                return (float) $debt->outstanding_balance / $remainingTermMonths;
+            }
+        }
+
         $installment = (float) $debt->monthly_installment;
 
         if ($installment > 0) {

@@ -85,12 +85,29 @@ class DebtOverviewWidget extends Widget
                 ->recommendAllocation($user, (float) $latestIncome->amount);
         }
 
+        $debtModelsById = $user->debts()
+            ->where('status', 'active')
+            ->whereIn('id', collect($analysis['ranked_debts'])->pluck('id')->filter()->all())
+            ->get()
+            ->keyBy('id');
+
         $debts = collect($analysis['ranked_debts'])
-            ->map(function (array $debt) use ($periodFactor): array {
+            ->map(function (array $debt) use ($periodFactor, $debtModelsById): array {
                 $debt['monthly_obligation'] = ((float) ($debt['monthly_obligation'] ?? 0)) * $periodFactor;
+
+                $details = (array) optional($debtModelsById->get($debt['id'] ?? null))->details;
+                $debt['type_label'] = $this->debtTypeLabel((string) ($debt['type'] ?? 'other'));
+                $debt['type_context'] = $this->debtTypeContext((string) ($debt['type'] ?? 'other'), $details);
 
                 return $debt;
             });
+
+        $debtTypeMix = $debts
+            ->groupBy('type_label')
+            ->map(fn ($group, string $label): string => $label . ' (' . $group->count() . ')')
+            ->values()
+            ->take(4)
+            ->implode(' · ');
 
         return [
             'debts'      => $debts,
@@ -100,8 +117,68 @@ class DebtOverviewWidget extends Widget
             'monthlyExpectedIncome' => ((float) $analysis['monthly_expected_income']) * $periodFactor,
             'mandatoryMonthlyExpenses' => ((float) $analysis['monthly_mandatory_expenses']) * $periodFactor,
             'periodSuffix' => $periodSuffix,
+            'debtTypeMix' => $debtTypeMix,
             'latestIncomeAmount' => $latestIncome ? (float) $latestIncome->amount : null,
             'allocation' => $allocation,
         ];
+    }
+
+    private function debtTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'bank_loan' => 'Bank Loan',
+            'mobile_loan' => 'Mobile Loan',
+            'mortgage' => 'Mortgage',
+            'vehicle_loan' => 'Vehicle Loan',
+            'personal_loan' => 'Personal Loan',
+            'hire_purchase' => 'Hire Purchase',
+            'credit_card' => 'Credit Card',
+            'student_loan' => 'Student Loan',
+            default => 'Other',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    private function debtTypeContext(string $type, array $details): ?string
+    {
+        return match ($type) {
+            'hire_purchase' => $this->hirePurchaseContext($details),
+            'mobile_loan' => ! empty($details['mobile_provider'])
+                ? 'Provider: ' . str_replace('_', ' ', (string) $details['mobile_provider'])
+                : null,
+            'mortgage', 'vehicle_loan' => ! empty($details['term_months'])
+                ? 'Term: ' . (int) $details['term_months'] . ' months'
+                : null,
+            default => ! empty($details['reference_number'])
+                ? 'Ref: ' . (string) $details['reference_number']
+                : null,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    private function hirePurchaseContext(array $details): ?string
+    {
+        $parts = [];
+
+        if (! empty($details['item_name'])) {
+            $parts[] = 'Item: ' . (string) $details['item_name'];
+        }
+
+        $suggestedInstallment = (float) ($details['suggested_installment'] ?? 0);
+        $remainingMonths = max((int) ($details['remaining_term_months'] ?? 0), 0);
+
+        if ($suggestedInstallment > 0 && $remainingMonths > 0) {
+            $parts[] = 'Plan: ZMW ' . number_format($suggestedInstallment, 2) . '/month for ~' . $remainingMonths . ' month(s)';
+        }
+
+        if (empty($parts)) {
+            return null;
+        }
+
+        return implode(' | ', $parts);
     }
 }

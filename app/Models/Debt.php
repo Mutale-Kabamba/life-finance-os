@@ -16,7 +16,7 @@ class Debt extends Model
         'user_id', 'creditor_name', 'type', 'original_amount',
         'outstanding_balance', 'monthly_installment', 'interest_rate',
         'total_repayment_amount', 'repayment_frequency',
-        'start_date', 'due_date', 'status', 'account_number', 'notes',
+        'start_date', 'due_date', 'status', 'account_number', 'notes', 'details',
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class Debt extends Model
         'total_repayment_amount' => 'decimal:2',
         'start_date'          => 'date',
         'due_date'            => 'date',
+        'details'             => 'array',
     ];
 
     public function user(): BelongsTo

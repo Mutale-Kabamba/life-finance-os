@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Models\ExpenseCategory;
 use App\Models\Profile;
 use App\Support\ExpenseCategoryDefaults;
+use App\Support\ZambiaReferenceData;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
@@ -125,19 +126,33 @@ class OnboardingWizard extends Page implements HasForms
                     ->maxDate(now()),
                 Select::make('province')
                     ->label('Province')
-                    ->options([
-                        'Central' => 'Central', 'Copperbelt' => 'Copperbelt',
-                        'Eastern' => 'Eastern', 'Luapula' => 'Luapula',
-                        'Lusaka' => 'Lusaka', 'Muchinga' => 'Muchinga',
-                        'Northern' => 'Northern', 'North-Western' => 'North-Western',
-                        'Southern' => 'Southern', 'Western' => 'Western',
-                    ])
+                    ->options(ZambiaReferenceData::provinceOptions())
+                    ->live()
                     ->searchable()
+                    ->native(false)
                     ->required(),
-                TextInput::make('district')
+                Select::make('district')
                     ->label('District')
-                    ->required()
-                    ->maxLength(100),
+                    ->options(function (Get $get): array {
+                        $options = ZambiaReferenceData::districtOptions((string) $get('province'));
+                        $current = trim((string) $get('district'));
+                        if ($current !== '' && ! array_key_exists($current, $options)) {
+                            $options[$current] = $current;
+                        }
+
+                        return $options;
+                    })
+                    ->disabled(fn (Get $get): bool => blank($get('province')))
+                    ->searchable()
+                    ->native(false)
+                    ->createOptionForm([
+                        TextInput::make('name')
+                            ->label('District name')
+                            ->required()
+                            ->maxLength(100),
+                    ])
+                    ->createOptionUsing(fn (array $data): string => trim((string) ($data['name'] ?? '')))
+                    ->required(),
                 Select::make('housing_type')
                     ->label('Living situation')
                     ->options([
@@ -380,23 +395,75 @@ class OnboardingWizard extends Page implements HasForms
                                 'other' => 'Other',
                             ])
                             ->default('personal_loan')
+                            ->live()
                             ->native(false),
                         TextInput::make('outstanding_balance')
-                            ->label('Loan amount (principal)')
+                            ->label(fn (Get $get): string => $get('type') === 'hire_purchase' ? 'Cash price (item value)' : 'Loan amount (principal)')
                             ->numeric()
                             ->prefix('ZMW')
                             ->required()
                             ->minValue(0)
+                            ->helperText(fn (Get $get): string => $get('type') === 'hire_purchase'
+                                ? 'For hire purchase, enter the item cash price. Use deposit and term details below.'
+                                : 'For standard debt products, enter the principal borrowed amount.')
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
                                 $this->syncDebtRepeaterLoanAmounts($set, $get, 'outstanding_balance');
+                            }),
+                        TextInput::make('details.item_name')
+                            ->label('Item being purchased')
+                            ->placeholder('e.g. Toyota Axio, fridge, solar kit')
+                            ->visible(fn (Get $get): bool => $get('type') === 'hire_purchase')
+                            ->required(fn (Get $get): bool => $get('type') === 'hire_purchase')
+                            ->maxLength(255),
+                        TextInput::make('details.deposit_amount')
+                            ->label('Deposit paid')
+                            ->numeric()
+                            ->prefix('ZMW')
+                            ->default(0)
+                            ->minValue(0)
+                            ->visible(fn (Get $get): bool => in_array($get('type'), ['hire_purchase', 'vehicle_loan', 'mortgage'], true))
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'details.deposit_amount');
                             }),
                         TextInput::make('monthly_installment')
                             ->label('Installment amount')
                             ->numeric()
                             ->prefix('ZMW')
                             ->default(0)
-                            ->minValue(0),
+                            ->minValue(0)
+                            ->readOnly(fn (Get $get): bool => $get('type') === 'hire_purchase')
+                            ->helperText(function (Get $get): string {
+                                if ($get('type') !== 'hire_purchase') {
+                                    return 'Amount paid per repayment cycle.';
+                                }
+
+                                $suggested = $this->toFloat($get('details.suggested_installment'));
+                                $remainingTerm = max((int) $this->toFloat($get('details.remaining_term_months')), 0);
+                                $financed = $this->toFloat($get('details.financed_amount'));
+
+                                if ($suggested > 0 && $remainingTerm > 0) {
+                                    return 'Suggested plan: ZMW ' . number_format($suggested, 2) . ' per month for about '
+                                        . $remainingTerm . ' month(s) on ZMW ' . number_format($financed, 2) . ' remaining financed amount.';
+                                }
+
+                                return 'Set term + total repayment to get an automatic monthly plan suggestion.';
+                            })
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'monthly_installment');
+                            }),
+                        TextInput::make('details.term_months')
+                            ->label('Repayment term (months)')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->visible(fn (Get $get): bool => in_array($get('type'), ['hire_purchase', 'vehicle_loan', 'mortgage', 'bank_loan', 'personal_loan', 'student_loan'], true))
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
+                                $this->syncDebtRepeaterLoanAmounts($set, $get, 'details.term_months');
+                            }),
                         Select::make('repayment_frequency')
                             ->label('Repayment frequency')
                             ->options([
@@ -407,27 +474,39 @@ class OnboardingWizard extends Page implements HasForms
                             ])
                             ->placeholder('Flexible / not fixed')
                             ->native(false),
+                        Select::make('details.mobile_provider')
+                            ->label('Mobile lender')
+                            ->options([
+                                'airtel_money' => 'Airtel Money',
+                                'mtn_momo' => 'MTN MoMo',
+                                'zamtel_kwacha' => 'Zamtel Kwacha',
+                                'other' => 'Other',
+                            ])
+                            ->visible(fn (Get $get): bool => $get('type') === 'mobile_loan')
+                            ->native(false),
                         TextInput::make('interest_rate')
-                            ->label('Interest percentage')
+                            ->label('Interest rate')
                             ->numeric()
                             ->suffix('%')
                             ->default(0)
                             ->minValue(0)
+                            ->visible(fn (Get $get): bool => $get('type') === 'personal_loan')
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
                                 $this->syncDebtRepeaterLoanAmounts($set, $get, 'interest_rate');
                             }),
                         TextInput::make('total_repayment_amount')
-                            ->label('Total repayment amount')
+                            ->label(fn (Get $get): string => $this->isPurchaseDebtType((string) $get('type')) ? 'Hire purchase price' : 'Total repayment amount')
                             ->numeric()
                             ->prefix('ZMW')
                             ->minValue(0)
+                            ->required()
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (\Filament\Forms\Set $set, Get $get): void {
                                 $this->syncDebtRepeaterLoanAmounts($set, $get, 'total_repayment_amount');
                             }),
                         DatePicker::make('start_date')
-                            ->label('Date borrowed'),
+                            ->label(fn (Get $get): string => $this->isPurchaseDebtType((string) $get('type')) ? 'Date purchased' : 'Date borrowed'),
                         DatePicker::make('due_date')
                             ->label('Expected repayment date'),
                     ]),
@@ -488,9 +567,26 @@ class OnboardingWizard extends Page implements HasForms
                             ])
                             ->default('sole_trader')
                             ->native(false),
-                        TextInput::make('business.industry')
+                        Select::make('business.industry')
                             ->label('Industry')
-                            ->maxLength(100),
+                            ->options(function (Get $get): array {
+                                $options = ZambiaReferenceData::businessIndustryOptions();
+                                $current = trim((string) $get('business.industry'));
+                                if ($current !== '' && ! array_key_exists($current, $options)) {
+                                    $options[$current] = $current;
+                                }
+
+                                return $options;
+                            })
+                            ->searchable()
+                            ->native(false)
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Industry name')
+                                    ->required()
+                                    ->maxLength(100),
+                            ])
+                            ->createOptionUsing(fn (array $data): string => trim((string) ($data['name'] ?? ''))),
                         TextInput::make('business.currency')
                             ->label('Currency')
                             ->default('ZMW')
@@ -583,13 +679,25 @@ class OnboardingWizard extends Page implements HasForms
                         Select::make('investment.type')
                             ->label('Type')
                             ->options([
-                                'stocks' => 'Stocks', 'bonds' => 'Bonds', 'treasury_bills' => 'Treasury bills',
-                                'fixed_deposit' => 'Fixed deposit', 'unit_trust' => 'Unit trust',
-                                'mutual_fund' => 'Mutual fund', 'real_estate' => 'Real estate',
-                                'cryptocurrency' => 'Cryptocurrency', 'business' => 'Business',
-                                'farming' => 'Farming', 'other' => 'Other',
+                                'stocks' => 'Listed Shares (LuSE / Global)',
+                                'bonds' => 'Government / Corporate Bonds',
+                                'treasury_bills' => 'Treasury Bills (BoZ)',
+                                'fixed_deposit' => 'Fixed Deposit',
+                                'unit_trust' => 'Unit Trust / CIS',
+                                'mutual_fund' => 'Mutual Fund',
+                                'real_estate' => 'Real Estate',
+                                'cryptocurrency' => 'Cryptocurrency',
+                                'business' => 'Business Equity',
+                                'farming' => 'Farming / Livestock',
+                                'other' => 'Other',
                             ])
                             ->default('other')
+                            ->live()
+                            ->native(false),
+                        Select::make('investment.details.subtype')
+                            ->label('Subtype')
+                            ->options(fn (Get $get): array => $this->investmentSubtypeOptions((string) $get('investment.type')))
+                            ->searchable()
                             ->native(false),
                         TextInput::make('investment.institution')
                             ->label('Institution')
@@ -598,7 +706,37 @@ class OnboardingWizard extends Page implements HasForms
                             ->label('Amount invested')
                             ->numeric()
                             ->prefix('ZMW')
-                            ->default(0),
+                            ->default(0)
+                            ->live(onBlur: true),
+                        TextInput::make('investment.details.rate_percent')
+                            ->label('Annual return rate')
+                            ->numeric()
+                            ->suffix('%')
+                            ->default(0)
+                            ->visible(fn (Get $get): bool => in_array($get('investment.type'), ['treasury_bills', 'bonds', 'fixed_deposit'], true)),
+                        TextInput::make('investment.details.tenor_months')
+                            ->label('Tenor (months)')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->visible(fn (Get $get): bool => in_array($get('investment.type'), ['treasury_bills', 'bonds', 'fixed_deposit'], true)),
+                        TextInput::make('investment.details.units')
+                            ->label('Units / shares held')
+                            ->numeric()
+                            ->minValue(0)
+                            ->visible(fn (Get $get): bool => in_array($get('investment.type'), ['stocks', 'unit_trust', 'mutual_fund', 'cryptocurrency'], true)),
+                        TextInput::make('investment.details.current_unit_price')
+                            ->label('Current unit/share price')
+                            ->numeric()
+                            ->prefix('ZMW')
+                            ->minValue(0)
+                            ->visible(fn (Get $get): bool => in_array($get('investment.type'), ['stocks', 'unit_trust', 'mutual_fund', 'cryptocurrency'], true)),
+                        TextInput::make('investment.details.annual_net_income')
+                            ->label('Estimated annual net income')
+                            ->numeric()
+                            ->prefix('ZMW')
+                            ->minValue(0)
+                            ->visible(fn (Get $get): bool => in_array($get('investment.type'), ['real_estate', 'business', 'farming'], true)),
                         TextInput::make('investment.current_value')
                             ->label('Current value')
                             ->numeric()
@@ -779,20 +917,78 @@ class OnboardingWizard extends Page implements HasForms
                     continue;
                 }
 
-                $balance = (float) ($debt['outstanding_balance'] ?? 0);
+                $type = (string) ($debt['type'] ?? 'personal_loan');
+                $principal = (float) ($debt['outstanding_balance'] ?? 0);
+                $monthlyInstallment = (float) ($debt['monthly_installment'] ?? 0);
+                $enteredTotal = (float) ($debt['total_repayment_amount'] ?? 0);
+                $termMonths = (int) ($debt['details']['term_months'] ?? 0);
+                $deposit = (float) ($debt['details']['deposit_amount'] ?? 0);
+                $interestRate = 0.0;
+
+                $totalRepayment = $enteredTotal;
+                $outstanding = $principal;
+
+                if ($type === 'hire_purchase') {
+                    if ($totalRepayment <= 0 && $monthlyInstallment > 0 && $termMonths > 0) {
+                        $totalRepayment = ($monthlyInstallment * $termMonths) + $deposit;
+                    }
+
+                    if ($totalRepayment <= 0) {
+                        $totalRepayment = $principal;
+                    }
+
+                    $outstanding = max($totalRepayment - $deposit, 0);
+
+                    $financedCashPrice = max($principal - $deposit, 0);
+                    if ($financedCashPrice > 0) {
+                        $interestRate = round(max((((($totalRepayment - $deposit) - $financedCashPrice) / $financedCashPrice) * 100), 0), 2);
+                    }
+
+                    $suggestedInstallment = 0.0;
+                    if ($termMonths > 0 && $outstanding > 0) {
+                        $suggestedInstallment = round($outstanding / $termMonths, 2);
+                    }
+                } else {
+                    if ($type === 'personal_loan') {
+                        if ($totalRepayment <= 0 && $interestRate > 0) {
+                            $totalRepayment = round($principal * (1 + ($interestRate / 100)), 2);
+                        }
+                    }
+
+                    if ($totalRepayment <= 0) {
+                        $totalRepayment = $principal;
+                    }
+
+                    $suggestedInstallment = 0.0;
+
+                    if ($principal > 0 && $totalRepayment > 0) {
+                        $interestRate = round(max((($totalRepayment - $principal) / $principal) * 100, 0), 2);
+                    }
+                }
+
+                $details = array_filter([
+                    'item_name' => $debt['details']['item_name'] ?? null,
+                    'deposit_amount' => $deposit > 0 ? $deposit : null,
+                    'term_months' => $termMonths > 0 ? $termMonths : null,
+                    'financed_amount' => $type === 'hire_purchase' ? round($outstanding, 2) : null,
+                    'suggested_installment' => $type === 'hire_purchase' && $suggestedInstallment > 0 ? $suggestedInstallment : null,
+                    'remaining_term_months' => $type === 'hire_purchase' && $termMonths > 0 ? $termMonths : null,
+                    'mobile_provider' => $debt['details']['mobile_provider'] ?? null,
+                ], fn ($value) => $value !== null && $value !== '');
 
                 $user->debts()->create([
                     'creditor_name'       => $debt['creditor_name'],
-                    'type'                => $debt['type'] ?? 'personal_loan',
-                    'original_amount'     => $balance,
-                    'outstanding_balance' => $balance,
-                    'monthly_installment' => $debt['monthly_installment'] ?? 0,
+                    'type'                => $type,
+                    'original_amount'     => $principal,
+                    'outstanding_balance' => $outstanding,
+                    'monthly_installment' => $monthlyInstallment,
                     'repayment_frequency' => $debt['repayment_frequency'] ?? null,
-                    'interest_rate'       => $debt['interest_rate'] ?? 0,
-                    'total_repayment_amount' => $debt['total_repayment_amount'] ?? null,
+                    'interest_rate'       => $interestRate,
+                    'total_repayment_amount' => $totalRepayment > 0 ? $totalRepayment : null,
                     'start_date'          => $debt['start_date'] ?? null,
                     'due_date'            => $debt['due_date'] ?? null,
                     'status'              => 'active',
+                    'details'             => $details ?: null,
                 ]);
             }
 
@@ -855,14 +1051,52 @@ class OnboardingWizard extends Page implements HasForms
             }
 
             if ($featureRegistry['has_investments'] && filled($state['investment']['name'] ?? null)) {
+                $investmentType = (string) ($state['investment']['type'] ?? 'other');
+                $initialAmount = (float) ($state['investment']['initial_amount'] ?? 0);
+                $enteredCurrentValue = (float) ($state['investment']['current_value'] ?? 0);
+                $details = $state['investment']['details'] ?? [];
+
+                $currentValue = $enteredCurrentValue;
+
+                if ($currentValue <= 0) {
+                    if (in_array($investmentType, ['treasury_bills', 'bonds', 'fixed_deposit'], true)) {
+                        $rate = (float) ($details['rate_percent'] ?? 0);
+                        $tenorMonths = max((int) ($details['tenor_months'] ?? 0), 0);
+                        if ($rate > 0 && $tenorMonths > 0) {
+                            $currentValue = round($initialAmount * (1 + (($rate / 100) * ($tenorMonths / 12))), 2);
+                        }
+                    } elseif (in_array($investmentType, ['stocks', 'unit_trust', 'mutual_fund', 'cryptocurrency'], true)) {
+                        $units = (float) ($details['units'] ?? 0);
+                        $currentUnitPrice = (float) ($details['current_unit_price'] ?? 0);
+                        if ($units > 0 && $currentUnitPrice > 0) {
+                            $currentValue = round($units * $currentUnitPrice, 2);
+                        }
+                    }
+                }
+
+                if ($currentValue <= 0) {
+                    $currentValue = $initialAmount;
+                }
+
+                $expectedReturnRate = 0.0;
+                if ($initialAmount > 0) {
+                    if (in_array($investmentType, ['real_estate', 'business', 'farming'], true) && (float) ($details['annual_net_income'] ?? 0) > 0) {
+                        $expectedReturnRate = round((((float) $details['annual_net_income']) / $initialAmount) * 100, 2);
+                    } else {
+                        $expectedReturnRate = round((($currentValue - $initialAmount) / $initialAmount) * 100, 2);
+                    }
+                }
+
                 $user->investments()->create([
                     'name'           => $state['investment']['name'],
-                    'type'           => $state['investment']['type'] ?? 'other',
+                    'type'           => $investmentType,
                     'institution'    => $state['investment']['institution'] ?? null,
-                    'initial_amount' => $state['investment']['initial_amount'] ?? 0,
-                    'current_value'  => $state['investment']['current_value'] ?: ($state['investment']['initial_amount'] ?? 0),
+                    'initial_amount' => $initialAmount,
+                    'current_value'  => $currentValue,
+                    'expected_return_rate' => $expectedReturnRate,
                     'start_date'     => $state['investment']['start_date'] ?? now(),
                     'status'         => 'active',
+                    'details'        => ! empty($details) ? $details : null,
                 ]);
             }
         });
@@ -892,23 +1126,75 @@ class OnboardingWizard extends Page implements HasForms
 
     private function syncDebtRepeaterLoanAmounts(\Filament\Forms\Set $set, Get $get, string $changedField): void
     {
+        $type = (string) ($get('type') ?? 'personal_loan');
         $principal = $this->toFloat($get('outstanding_balance'));
         if ($principal <= 0) {
             return;
         }
 
+        $deposit = $this->toFloat($get('details.deposit_amount'));
+        $termMonths = max((int) $this->toFloat($get('details.term_months')), 0);
+        $installment = $this->toFloat($get('monthly_installment'));
         $interest = $this->toFloat($get('interest_rate'));
         $total = $this->toFloat($get('total_repayment_amount'));
 
-        if ($changedField === 'total_repayment_amount' && $total > 0) {
-            $derivedInterest = (($total - $principal) / $principal) * 100;
-            $set('interest_rate', round(max(0, $derivedInterest), 2));
+        if ($type === 'hire_purchase') {
+            if ($changedField !== 'total_repayment_amount' && $installment > 0 && $termMonths > 0) {
+                $total = round(($installment * $termMonths) + $deposit, 2);
+                $set('total_repayment_amount', $total);
+            }
+
+            if ($total <= 0) {
+                $total = $principal;
+            }
+
+            $financedRepayment = max($total - $deposit, 0);
+            $set('details.financed_amount', round($financedRepayment, 2));
+
+            if ($termMonths > 0 && $financedRepayment > 0) {
+                $suggested = round($financedRepayment / $termMonths, 2);
+                $set('details.suggested_installment', $suggested);
+                $set('details.remaining_term_months', $termMonths);
+                $set('monthly_installment', $suggested);
+            }
+
+            if ($total > 0) {
+                $financedCashPrice = max($principal - $deposit, 0);
+                if ($financedCashPrice > 0) {
+                    $set('interest_rate', round(max((($financedRepayment - $financedCashPrice) / $financedCashPrice) * 100, 0), 2));
+                }
+            }
 
             return;
         }
 
-        if ($interest >= 0) {
-            $set('total_repayment_amount', round($principal * (1 + ($interest / 100)), 2));
+        if ($type === 'personal_loan') {
+            if ($changedField === 'interest_rate' && $interest >= 0) {
+                $total = round($principal * (1 + ($interest / 100)), 2);
+                $set('total_repayment_amount', $total);
+            } elseif ($total > 0) {
+                $derivedInterest = (($total - $principal) / $principal) * 100;
+                $set('interest_rate', round(max(0, $derivedInterest), 2));
+            }
+
+            if ($termMonths > 0 && $total > 0) {
+                $suggested = round($total / $termMonths, 2);
+                $set('details.suggested_installment', $suggested);
+                $set('details.remaining_term_months', $termMonths);
+
+                if ($installment <= 0 || in_array($changedField, ['outstanding_balance', 'interest_rate', 'total_repayment_amount', 'details.term_months'], true)) {
+                    $set('monthly_installment', $suggested);
+                }
+            }
+
+            return;
+        }
+
+        if ($total > 0) {
+            $derivedInterest = (($total - $principal) / $principal) * 100;
+            $set('interest_rate', round(max(0, $derivedInterest), 2));
+
+            return;
         }
     }
 
@@ -932,5 +1218,58 @@ class OnboardingWizard extends Page implements HasForms
         }
 
         return (float) str_replace(',', '', (string) $value);
+    }
+
+    private function isPurchaseDebtType(string $type): bool
+    {
+        return in_array($type, ['hire_purchase', 'vehicle_loan', 'mortgage'], true);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function investmentSubtypeOptions(string $type): array
+    {
+        return match ($type) {
+            'treasury_bills' => [
+                '91_day' => '91-day Treasury Bill',
+                '182_day' => '182-day Treasury Bill',
+                '273_day' => '273-day Treasury Bill',
+                '364_day' => '364-day Treasury Bill',
+            ],
+            'bonds' => [
+                'government_bond' => 'Government Bond',
+                'corporate_bond' => 'Corporate Bond',
+                'infrastructure_bond' => 'Infrastructure Bond',
+            ],
+            'fixed_deposit' => [
+                '30_day' => '30-day Fixed Deposit',
+                '90_day' => '90-day Fixed Deposit',
+                '180_day' => '180-day Fixed Deposit',
+                '365_day' => '365-day Fixed Deposit',
+            ],
+            'stocks' => [
+                'luse_equity' => 'LuSE Listed Equity',
+                'regional_equity' => 'Regional Equity',
+                'global_equity' => 'Global Equity',
+            ],
+            'unit_trust', 'mutual_fund' => [
+                'money_market' => 'Money Market Fund',
+                'balanced_fund' => 'Balanced Fund',
+                'equity_fund' => 'Equity Fund',
+                'income_fund' => 'Income Fund',
+            ],
+            'real_estate' => [
+                'rental_property' => 'Rental Property',
+                'land_bank' => 'Land Bank',
+                'commercial_property' => 'Commercial Property',
+            ],
+            'farming' => [
+                'crop_farming' => 'Crop Farming',
+                'livestock' => 'Livestock',
+                'mixed_farming' => 'Mixed Farming',
+            ],
+            default => [],
+        };
     }
 }

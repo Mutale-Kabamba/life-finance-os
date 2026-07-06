@@ -14,7 +14,7 @@ class Investment extends Model
     protected $fillable = [
         'user_id', 'name', 'type', 'institution', 'initial_amount',
         'current_value', 'expected_return_rate', 'start_date',
-        'maturity_date', 'status', 'notes',
+        'maturity_date', 'status', 'notes', 'details',
     ];
 
     protected $casts = [
@@ -23,6 +23,7 @@ class Investment extends Model
         'expected_return_rate' => 'decimal:2',
         'start_date'           => 'date',
         'maturity_date'        => 'date',
+        'details'              => 'array',
     ];
 
     public function user(): BelongsTo

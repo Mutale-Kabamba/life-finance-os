@@ -174,6 +174,20 @@
             @endforeach
         </div>
 
+        @if (! empty($investmentTypeHighlights))
+            <div style="margin-bottom: .75rem; font-size: .78rem; color: rgb(75 85 99);">
+                <span style="font-weight: 700;">Investment mix:</span>
+                @foreach ($investmentTypeHighlights as $index => $mix)
+                    <span>
+                        {{ $mix['label'] }} ({{ $mix['count'] }}, ZMW {{ number_format($mix['value'], 2) }})@if($index < count($investmentTypeHighlights) - 1) · @endif
+                    </span>
+                @endforeach
+                @if (($upcomingMaturities ?? 0) > 0)
+                    <span> · {{ $upcomingMaturities }} maturity event(s) due within 120 days</span>
+                @endif
+            </div>
+        @endif
+
         <div class="kpi-grid">
             @foreach ($cards as $card)
                 <article class="kpi-card kpi-theme-{{ $card['theme'] }}">

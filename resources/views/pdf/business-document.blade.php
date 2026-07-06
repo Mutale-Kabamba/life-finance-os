@@ -77,6 +77,14 @@
         .notes-label { font-weight: 700; margin-bottom: 4px; }
 
         .footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
+        .watermark {
+            position: fixed;
+            left: 10px;
+            bottom: 6px;
+            font-size: 10px;
+            color: #9ca3af;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -206,5 +214,7 @@
         @endif
         Generated on {{ now()->format('d M Y H:i') }}
     </div>
+
+    <div class="watermark">(c)2026 Ori Studio Systems</div>
 </body>
 </html>
