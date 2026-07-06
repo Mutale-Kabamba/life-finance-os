@@ -2,23 +2,23 @@
 
 @section('title', 'Contacts - ' . config('app.name', 'Life Finance OS'))
 @section('hero_pill', 'Get In Touch')
-@section('hero_title_prefix', 'Need support?')
-@section('hero_title_highlight', 'We are here.')
-@section('hero_caption', 'Reach out for support, onboarding help, or partnership inquiries.')
+@section('hero_title_prefix', 'Questions?')
+@section('hero_title_highlight', 'We are here to help.')
+@section('hero_caption', 'Whether you need help getting started, have product questions, or want to discuss partnerships, our team is ready to assist.')
 @section('hero_show_preview', '0')
 
 @section('content')
     <section class="section" style="padding-top: 8px;">
         <div class="section-head reveal">
             <span class="eyebrow">Contact</span>
-            <h2>Contact us</h2>
-            <p>Have questions, feedback, or need help with setup? Send us a message.</p>
+            <h2>Questions? We are here to help.</h2>
+            <p>Whether you need onboarding support, product guidance, or partnership information, we are ready to assist.</p>
         </div>
 
         <div class="contact-grid reveal delay-1">
             <div class="contact-card">
                 <h3>Send a message</h3>
-                <p>Tell us a bit about what you need and our team will get back to you.</p>
+                <p>Tell us what you need and we will point you to the best next step.</p>
 
                 <form class="contact-form" action="javascript:void(0)">
                     <div class="contact-row">
@@ -55,6 +55,8 @@
 
                     <button type="submit" class="btn btn-primary">Send message</button>
                 </form>
+
+                <p style="margin-top: 14px; color: var(--muted);">We typically respond within one business day.</p>
             </div>
 
             <div class="contact-info">
