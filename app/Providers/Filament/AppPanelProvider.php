@@ -39,6 +39,10 @@ class AppPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 fn (): string => '<link rel="icon" type="image/png" href="' . asset('img/logos/icon_BG.png') . '"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />'
             )
+            ->renderHook(
+                PanelsRenderHook::STYLES_AFTER,
+                fn (): string => view('filament.auth-mobile-theme')->render(),
+            )
             ->colors([
                 'primary' => Color::hex('#004AAD'),
                 'danger'  => Color::Rose,

@@ -16,9 +16,9 @@ class Register extends \Filament\Pages\Auth\Register
         return [
             ['label' => 'Google', 'provider' => 'google', 'color' => '#EA4335', 'icon_class' => 'fa-google'],
             ['label' => 'Facebook', 'provider' => 'facebook', 'color' => '#1877F2', 'icon_class' => 'fa-facebook-f'],
-            ['label' => 'X', 'provider' => 'x', 'color' => '#111111', 'icon_class' => 'fa-x-twitter'],
-            ['label' => 'LinkedIn OpenID', 'provider' => 'linkedin-openid', 'color' => '#0A66C2', 'icon_class' => 'fa-linkedin-in'],
-            ['label' => 'GitHub', 'provider' => 'github', 'color' => '#24292E', 'icon_class' => 'fa-github'],
+            // ['label' => 'X', 'provider' => 'x', 'color' => '#111111', 'icon_class' => 'fa-x-twitter'],
+            // ['label' => 'LinkedIn OpenID', 'provider' => 'linkedin-openid', 'color' => '#0A66C2', 'icon_class' => 'fa-linkedin-in'],
+            // ['label' => 'GitHub', 'provider' => 'github', 'color' => '#24292E', 'icon_class' => 'fa-github'],
         ];
     }
 
