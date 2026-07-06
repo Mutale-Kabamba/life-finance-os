@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Models\ExpenseCategory;
 use App\Models\Profile;
+use App\Support\ExpenseCategoryDefaults;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
@@ -54,6 +55,8 @@ class OnboardingWizard extends Page implements HasForms
 
     public function mount(): void
     {
+        ExpenseCategoryDefaults::ensure();
+
         $profile = Auth::user()?->profile;
 
         $this->form->fill([
@@ -249,7 +252,14 @@ class OnboardingWizard extends Page implements HasForms
                                     ->maxLength(255),
                                 Select::make('expense_category_id')
                                     ->label('Category')
-                                    ->options(fn (): array => ExpenseCategory::query()->orderBy('name')->pluck('name', 'id')->all())
+                                    ->options(fn (): array => ExpenseCategoryDefaults::options())
+                                    ->createOptionForm([
+                                        TextInput::make('name')
+                                            ->label('New category name')
+                                            ->required()
+                                            ->maxLength(100),
+                                    ])
+                                    ->createOptionUsing(fn (array $data): int => ExpenseCategoryDefaults::createFromName((string) ($data['name'] ?? '')))
                                     ->searchable()
                                     ->native(false)
                                     ->required(),
@@ -715,6 +725,10 @@ class OnboardingWizard extends Page implements HasForms
                     ?? ExpenseCategory::query()
                         ->firstOrCreate(['slug' => 'other'], ['name' => 'Other', 'is_system' => true])
                         ->getKey();
+
+                if (! $categoryId || ! ExpenseCategory::query()->whereKey($categoryId)->exists()) {
+                    $categoryId = ExpenseCategoryDefaults::defaultCategoryId();
+                }
 
                 $user->expenses()->create([
                     'expense_category_id' => $categoryId,
